@@ -51,13 +51,12 @@ export default function Home() {
     });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    setStatus("Enviando agendamento...");
+  setStatus("Enviando agendamento...");
 
-  const { error } = await supabase.from("agendamentos").insert([
-  {
+  const payload = {
     nome: form.nome,
     cpf: form.cpf,
     whatsapp: form.whatsapp,
@@ -73,16 +72,19 @@ export default function Home() {
     data: form.data,
     horario: form.horario,
     status: "pendente"
-  }
-]);
-
-    if (error) {
-  console.error(error);
-  setStatus("ERRO REAL: " + error.message);
-}  else {
-      setStatus("Agendamento realizado com sucesso!");
-    }
   };
+
+  const { error } = await supabase
+    .from("agendamentos")
+    .insert([payload]);
+
+  if (error) {
+    console.error(error);
+    setStatus("ERRO REAL: " + error.message);
+  } else {
+    setStatus("Agendamento realizado com sucesso!");
+  }
+};
 
   return (
     <main style={{ padding: "30px", fontFamily: "Arial", background: "#f5fbff", minHeight: "100vh" }}>
