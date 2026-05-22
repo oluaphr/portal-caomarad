@@ -58,15 +58,19 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    const logado = localStorage.getItem("adminLogado");
+  const verificarSessao = async () => {
+    const { data } = await supabase.auth.getSession();
 
-    if (!logado) {
+    if (!data.session) {
       router.push("/admin/login");
       return;
     }
 
     carregarAgendamentos();
-  }, []);
+  };
+
+  verificarSessao();
+}, []);
 
   const alterarStatus = async (id, novoStatus) => {
     await supabase
@@ -198,10 +202,10 @@ export default function AdminPage() {
           </div>
 
           <button
-            onClick={() => {
-              localStorage.removeItem("adminLogado");
-              router.push("/admin/login");
-            }}
+            onClick={async () => {
+  await supabase.auth.signOut();
+  router.push("/admin/login");
+}}
            style={{
   background: "#d32f2f",
   color: "#fff",

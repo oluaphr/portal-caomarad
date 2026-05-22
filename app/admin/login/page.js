@@ -1,92 +1,86 @@
 "use client";
 
 import { useState } from "react";
+import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
+
 export default function LoginAdmin() {
-  const [usuario, setUsuario] = useState("");
+  const router = useRouter();
+  const [email, setEmail] = useState("admin@vetcaomarada.com.br");
   const [senha, setSenha] = useState("");
   const [erro, setErro] = useState("");
-  const router = useRouter();
 
-  const entrar = (e) => {
+  const entrar = async (e) => {
     e.preventDefault();
+    setErro("");
 
-    if (usuario === "admin" && senha === "rada3033") {
-      localStorage.setItem("adminLogado", "true");
-      router.push("/admin");
-    } else {
-      setErro("Usuário ou senha inválidos.");
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password: senha
+    });
+
+    if (error) {
+      setErro("E-mail ou senha inválidos.");
+      return;
     }
+
+    router.push("/admin");
   };
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "#eef5fb",
-        fontFamily: "Arial"
-      }}
-    >
-      <form
-        onSubmit={entrar}
-        style={{
-          background: "#fff",
-          padding: "40px",
-          borderRadius: "20px",
-          boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-          width: "420px"
-        }}
-      >
-        <h1 style={{ color: "#1565c0" }}>Admin Portal Cãomarada</h1>
+    <main style={{
+      minHeight: "100vh",
+      background: "#eef5fb",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontFamily: "Arial"
+    }}>
+      <form onSubmit={entrar} style={{
+        background: "#fff",
+        padding: 40,
+        borderRadius: 20,
+        width: 420,
+        boxShadow: "0 10px 30px rgba(0,0,0,.08)"
+      }}>
+        <h1 style={{ color: "#1565c0" }}>Login Admin</h1>
+        <p>Portal Cãomarada</p>
 
         <input
-          placeholder="Usuário"
-          value={usuario}
-          onChange={(e) => setUsuario(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "14px",
-            marginTop: "20px",
-            borderRadius: "10px",
-            border: "1px solid #ddd"
-          }}
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="E-mail"
+          style={{ width: "100%", padding: 14, marginTop: 20 }}
         />
 
         <input
           type="password"
-          placeholder="Senha"
           value={senha}
           onChange={(e) => setSenha(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "14px",
-            marginTop: "12px",
-            borderRadius: "10px",
-            border: "1px solid #ddd"
-          }}
+          placeholder="Senha"
+          style={{ width: "100%", padding: 14, marginTop: 12 }}
         />
 
-        <button
-          type="submit"
-          style={{
-            width: "100%",
-            marginTop: "20px",
-            padding: "15px",
-            background: "#1565c0",
-            color: "#fff",
-            border: "none",
-            borderRadius: "12px",
-            fontWeight: "bold"
-          }}
-        >
+        <button style={{
+          width: "100%",
+          padding: 15,
+          marginTop: 20,
+          background: "#1565c0",
+          color: "#fff",
+          border: "none",
+          borderRadius: 12,
+          fontWeight: "bold"
+        }}>
           Entrar
         </button>
 
-        <p style={{ color: "red", marginTop: "15px" }}>{erro}</p>
+        <p style={{ color: "red" }}>{erro}</p>
       </form>
     </main>
   );
