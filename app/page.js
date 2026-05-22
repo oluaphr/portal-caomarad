@@ -101,16 +101,8 @@ export default function Home() {
     };
 
     const { error } = await supabase
-      .from("agendamentos")
-      .insert([payload]);
-
-    if (error) {
-      setStatus("Erro: " + error.message);
-    } else {
-      setStatus("Agendamento realizado com sucesso!");
-    }
-  };
-
+  .from("agendamentos")
+  .insert([payload]);
   const inputStyle = {
     width: "100%",
     padding: "14px",
