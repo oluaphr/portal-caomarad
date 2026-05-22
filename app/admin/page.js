@@ -59,7 +59,23 @@ const cancelados = agendamentos.filter(a => a.status === "cancelado").length;
 const finalizados = agendamentos.filter(a => a.status === "finalizado").length;
 const total = agendamentos.length;
     const termo = busca.toLowerCase();
+const pendentes = agendamentos.filter(
+  (a) => a.status === "pendente"
+).length;
 
+const confirmados = agendamentos.filter(
+  (a) => a.status === "confirmado"
+).length;
+
+const cancelados = agendamentos.filter(
+  (a) => a.status === "cancelado"
+).length;
+
+const finalizados = agendamentos.filter(
+  (a) => a.status === "finalizado"
+).length;
+
+const total = agendamentos.length;
     return (
       item.nome?.toLowerCase().includes(termo) ||
       item.pet?.toLowerCase().includes(termo) ||
