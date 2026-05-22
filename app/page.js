@@ -80,29 +80,44 @@ export default function Home() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    const payload = {
-      nome: form.nome,
-      cpf: form.cpf,
-      whatsapp: form.whatsapp,
-      email: form.email,
-      pet: form.pet,
-      especie: form.especie,
-      raca: form.raca,
-      idade: form.idade,
-      convenio: form.convenio,
-      nomeconvenio: form.nomeConvenio,
-      chip: form.chip,
-      especialidade: form.especialidade,
-      data: form.data,
-      horario: form.horario,
-      status: "pendente"
-    };
+  setStatus("Enviando agendamento...");
 
-    const { error } = await supabase
-  .from("agendamentos")
-  .insert([payload]);
+  const payload = {
+    nome: form.nome,
+    cpf: form.cpf,
+    whatsapp: form.whatsapp,
+    email: form.email,
+    pet: form.pet,
+    especie: form.especie,
+    raca: form.raca,
+    idade: form.idade,
+    convenio: form.convenio,
+    nomeconvenio: form.nomeConvenio,
+    chip: form.chip,
+    especialidade: form.especialidade,
+    data: form.data,
+    horario: form.horario,
+    status: "pendente"
+  };
+
+  const response = await fetch("/api/agendamento", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    setStatus("Erro: " + result.error);
+  } else {
+    setStatus("Agendamento realizado com sucesso!");
+  }
+};
   const inputStyle = {
     width: "100%",
     padding: "14px",
