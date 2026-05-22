@@ -56,12 +56,25 @@ export default function Home() {
 
     setStatus("Enviando agendamento...");
 
-    const { error } = await supabase.from("agendamentos").insert([
-      {
-        ...form,
-        status: "pendente"
-      }
-    ]);
+  const { error } = await supabase.from("agendamentos").insert([
+  {
+    nome: form.nome,
+    cpf: form.cpf,
+    whatsapp: form.whatsapp,
+    email: form.email,
+    pet: form.pet,
+    especie: form.especie,
+    raca: form.raca,
+    idade: form.idade,
+    convenio: form.convenio,
+    nomeconvenio: form.nomeConvenio,
+    carteirinha: form.carteirinha,
+    especialidade: form.especialidade,
+    data: form.data,
+    horario: form.horario,
+    status: "pendente"
+  }
+]);
 
     if (error) {
   console.error(error);
