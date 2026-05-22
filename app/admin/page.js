@@ -99,7 +99,7 @@ export default function AdminPage() {
         horario: horarioForm.horario,
         ativo: true
       }],
-      { onConflict: "especialidade,data,horario" }
+      { onConflict: "especialidade,data,horario", ignoreDuplicates: false }
     );
 
     if (error) {

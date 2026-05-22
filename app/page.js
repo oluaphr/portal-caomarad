@@ -23,11 +23,11 @@ const especialidades = [
   "Nefrologista"
 ];
 
-const [horariosLiberados, setHorariosLiberados] = useState([]);
 
 export default function Home() {
   const [status, setStatus] = useState("");
   const [horariosOcupados, setHorariosOcupados] = useState([]);
+  const [horariosLiberados, setHorariosLiberados] = useState([]);
   const [mostrarWhatsapp, setMostrarWhatsapp] = useState(false);
 
 
@@ -217,26 +217,25 @@ export default function Home() {
 
             <input style={inputStyle} type="date" name="data" onChange={handleChange} required />
 
-            <select style={inputStyle} name="horario" onChange={handleChange} required>
-             <option value="">
-  {horariosLiberados.length === 0
-    ? "Nenhum horário liberado"
-    : "Selecione o horário"}
-</option>
-
-{horariosLiberados.map((hora) => (
-  <option
-    key={hora}
-    value={hora}
-    disabled={horariosOcupados.includes(hora)}
-  >
-    {horariosOcupados.includes(hora)
-      ? `${hora} (ocupado)`
-      : hora}
+          <select style={inputStyle} name="horario" onChange={handleChange} required>
+  <option value="">
+    {horariosLiberados.length === 0
+      ? "Nenhum horário liberado"
+      : "Selecione o horário"}
   </option>
-))}
-              ))}
-            </select>
+
+  {horariosLiberados.map((hora) => (
+    <option
+      key={hora}
+      value={hora}
+      disabled={horariosOcupados.includes(hora)}
+    >
+      {horariosOcupados.includes(hora)
+        ? `${hora} (ocupado)`
+        : hora}
+    </option>
+  ))}
+</select>
           </div>
 
           <button
