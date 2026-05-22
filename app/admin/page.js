@@ -10,7 +10,7 @@ const supabase = createClient(
 );
 
 export default function AdminPage() {
-  const router = useRouter();	
+  const router = useRouter();
   const [agendamentos, setAgendamentos] = useState([]);
   const [busca, setBusca] = useState("");
   const [especialidadeFiltro, setEspecialidadeFiltro] = useState("");
@@ -25,23 +25,20 @@ export default function AdminPage() {
       query = query.eq("especialidade", especialidadeFiltro);
     }
 
-    const { data, error } = await query;
-
-    if (!error) {
-      setAgendamentos(data || []);
-    }
+    const { data } = await query;
+    setAgendamentos(data || []);
   };
 
   useEffect(() => {
-  const logado = localStorage.getItem("adminLogado");
+    const logado = localStorage.getItem("adminLogado");
 
-  if (!logado) {
-    router.push("/admin/login");
-    return;
-  }
+    if (!logado) {
+      router.push("/admin/login");
+      return;
+    }
 
-  carregarAgendamentos();
-}, [especialidadeFiltro]);
+    carregarAgendamentos();
+  }, [especialidadeFiltro]);
 
   const alterarStatus = async (id, novoStatus) => {
     await supabase
@@ -53,29 +50,8 @@ export default function AdminPage() {
   };
 
   const filtrados = agendamentos.filter((item) => {
-    const pendentes = agendamentos.filter(a => a.status === "pendente").length;
-const confirmados = agendamentos.filter(a => a.status === "confirmado").length;
-const cancelados = agendamentos.filter(a => a.status === "cancelado").length;
-const finalizados = agendamentos.filter(a => a.status === "finalizado").length;
-const total = agendamentos.length;
     const termo = busca.toLowerCase();
-const pendentes = agendamentos.filter(
-  (a) => a.status === "pendente"
-).length;
 
-const confirmados = agendamentos.filter(
-  (a) => a.status === "confirmado"
-).length;
-
-const cancelados = agendamentos.filter(
-  (a) => a.status === "cancelado"
-).length;
-
-const finalizados = agendamentos.filter(
-  (a) => a.status === "finalizado"
-).length;
-
-const total = agendamentos.length;
     return (
       item.nome?.toLowerCase().includes(termo) ||
       item.pet?.toLowerCase().includes(termo) ||
@@ -83,166 +59,90 @@ const total = agendamentos.length;
     );
   });
 
+  const pendentes = agendamentos.filter(a => a.status === "pendente").length;
+  const confirmados = agendamentos.filter(a => a.status === "confirmado").length;
+  const cancelados = agendamentos.filter(a => a.status === "cancelado").length;
+  const finalizados = agendamentos.filter(a => a.status === "finalizado").length;
+  const total = agendamentos.length;
+
   const card = {
     background: "#fff",
     padding: "20px",
     borderRadius: "16px",
     boxShadow: "0 8px 20px rgba(0,0,0,0.08)"
   };
+
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        background: "#eef5fb",
-        padding: "30px",
-        fontFamily: "Arial"
-      }}
-    >
+    <main style={{
+      minHeight: "100vh",
+      background: "#eef5fb",
+      padding: "30px",
+      fontFamily: "Arial"
+    }}>
       <div style={{ maxWidth: "1500px", margin: "0 auto" }}>
-<div
-  style={{
-    display: "grid",
-    gridTemplateColumns: "repeat(5, 1fr)",
-    gap: "15px",
-    marginBottom: "20px"
-  }}
->
-  <div style={card}>
-    <h3>📊 Total</h3>
-    <h1>{total}</h1>
-  </div>
 
-  <div style={card}>
-    <h3>🟡 Pendentes</h3>
-    <h1>{pendentes}</h1>
-  </div>
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(5, 1fr)",
+          gap: "15px",
+          marginBottom: "20px"
+        }}>
+          <div style={card}><h3>📊 Total</h3><h1>{total}</h1></div>
+          <div style={card}><h3>🟡 Pendentes</h3><h1>{pendentes}</h1></div>
+          <div style={card}><h3>🟢 Confirmados</h3><h1>{confirmados}</h1></div>
+          <div style={card}><h3>🔴 Cancelados</h3><h1>{cancelados}</h1></div>
+          <div style={card}><h3>🔵 Finalizados</h3><h1>{finalizados}</h1></div>
+        </div>
 
-  <div style={card}>
-    <h3>🟢 Confirmados</h3>
-    <h1>{confirmados}</h1>
-  </div>
+        <div style={card}>
+          <div style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center"
+          }}>
+            <div>
+              <h1 style={{ color: "#1565c0" }}>Painel Administrativo</h1>
+              <p>Portal Cãomarada</p>
+            </div>
 
-  <div style={card}>
-    <h3>🔴 Cancelados</h3>
-    <h1>{cancelados}</h1>
-  </div>
+            <button
+              onClick={() => {
+                localStorage.removeItem("adminLogado");
+                router.push("/admin/login");
+              }}
+              style={{
+                padding: "10px 16px",
+                background: "#d32f2f",
+                color: "#fff",
+                border: "none",
+                borderRadius: "10px"
+              }}
+            >
+              Sair
+            </button>
+          </div>
+        </div>
 
-  <div style={card}>
-    <h3>🔵 Finalizados</h3>
-    <h1>{finalizados}</h1>
-  </div>
-</div>
-  <div style={card}>
-  <div
-    style={{
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center"
-    }}
-  >
-    <div>
-      <h1 style={{ color: "#1565c0" }}>Painel Administrativo</h1>
-      <p>Portal Cãomarada</p>
-    </div>
-
-    <button
-      onClick={() => {
-        localStorage.removeItem("adminLogado");
-        router.push("/admin/login");
-      }}
-      style={{
-        padding: "10px 16px",
-        background: "#d32f2f",
-        color: "#fff",
-        border: "none",
-        borderRadius: "10px",
-        cursor: "pointer"
-      }}
-    >
-      Sair
-    </button>
-  </div>
-</div>
-
-        <div
-          style={{
-            ...card,
-            marginTop: "20px",
-            display: "grid",
-            gridTemplateColumns: "1fr 300px",
-            gap: "20px"
-          }}
-        >
+        <div style={{
+          ...card,
+          marginTop: "20px",
+          display: "grid",
+          gridTemplateColumns: "1fr 300px",
+          gap: "20px"
+        }}>
           <input
             placeholder="Buscar tutor / pet / CPF"
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
-            style={{
-              padding: "14px",
-              borderRadius: "10px",
-              border: "1px solid #ddd"
-            }}
           />
 
           <input
             placeholder="Filtrar especialidade"
             value={especialidadeFiltro}
             onChange={(e) => setEspecialidadeFiltro(e.target.value)}
-            style={{
-              padding: "14px",
-              borderRadius: "10px",
-              border: "1px solid #ddd"
-            }}
           />
         </div>
 
-        <div style={{ ...card, marginTop: "20px", overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ background: "#1565c0", color: "#fff" }}>
-                <th style={{ padding: "12px" }}>Tutor</th>
-                <th>CPF</th>
-                <th>Pet</th>
-                <th>Convênio</th>
-                <th>CHIP</th>
-                <th>Especialidade</th>
-                <th>Data</th>
-                <th>Hora</th>
-                <th>Status</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {filtrados.map((item) => (
-                <tr key={item.id} style={{ borderBottom: "1px solid #eee" }}>
-                  <td style={{ padding: "10px" }}>{item.nome}</td>
-                  <td>{item.cpf}</td>
-                  <td>{item.pet}</td>
-                  <td>{item.nomeconvenio || "-"}</td>
-                  <td>{item.chip || "-"}</td>
-                  <td>{item.especialidade}</td>
-                  <td>{item.data}</td>
-                  <td>{item.horario}</td>
-                  <td>{item.status}</td>
-                  <td>
-                    <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-                      <button onClick={() => alterarStatus(item.id, "confirmado")}>
-                        Confirmar
-                      </button>
-                      <button onClick={() => alterarStatus(item.id, "cancelado")}>
-                        Cancelar
-                      </button>
-                      <button onClick={() => alterarStatus(item.id, "finalizado")}>
-                        Finalizar
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
       </div>
     </main>
   );
