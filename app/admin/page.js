@@ -22,7 +22,7 @@ export default function AdminPage() {
       .order("created_at", { ascending: false });
 
     if (especialidadeFiltro) {
-      query = query.eq("especialidade", especialidadeFiltro);
+      query = query.ilike("especialidade", `%${especialidadeFiltro}%`);
     }
 
     const { data } = await query;
@@ -72,21 +72,34 @@ export default function AdminPage() {
     boxShadow: "0 8px 20px rgba(0,0,0,0.08)"
   };
 
+  const botao = (cor) => ({
+    padding: "8px 12px",
+    border: "none",
+    borderRadius: "8px",
+    color: "#fff",
+    cursor: "pointer",
+    background: cor
+  });
+
   return (
-    <main style={{
-      minHeight: "100vh",
-      background: "#eef5fb",
-      padding: "30px",
-      fontFamily: "Arial"
-    }}>
+    <main
+      style={{
+        minHeight: "100vh",
+        background: "#eef5fb",
+        padding: "30px",
+        fontFamily: "Arial"
+      }}
+    >
       <div style={{ maxWidth: "1500px", margin: "0 auto" }}>
 
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(5, 1fr)",
-          gap: "15px",
-          marginBottom: "20px"
-        }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(5, 1fr)",
+            gap: "15px",
+            marginBottom: "20px"
+          }}
+        >
           <div style={card}><h3>📊 Total</h3><h1>{total}</h1></div>
           <div style={card}><h3>🟡 Pendentes</h3><h1>{pendentes}</h1></div>
           <div style={card}><h3>🟢 Confirmados</h3><h1>{confirmados}</h1></div>
@@ -95,11 +108,13 @@ export default function AdminPage() {
         </div>
 
         <div style={card}>
-          <div style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center"
-          }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center"
+            }}
+          >
             <div>
               <h1 style={{ color: "#1565c0" }}>Painel Administrativo</h1>
               <p>Portal Cãomarada</p>
@@ -123,24 +138,82 @@ export default function AdminPage() {
           </div>
         </div>
 
-        <div style={{
-          ...card,
-          marginTop: "20px",
-          display: "grid",
-          gridTemplateColumns: "1fr 300px",
-          gap: "20px"
-        }}>
+        <div
+          style={{
+            ...card,
+            marginTop: "20px",
+            display: "grid",
+            gridTemplateColumns: "1fr 300px",
+            gap: "20px"
+          }}
+        >
           <input
             placeholder="Buscar tutor / pet / CPF"
             value={busca}
             onChange={(e) => setBusca(e.target.value)}
+            style={{ padding: "12px" }}
           />
 
           <input
             placeholder="Filtrar especialidade"
             value={especialidadeFiltro}
             onChange={(e) => setEspecialidadeFiltro(e.target.value)}
+            style={{ padding: "12px" }}
           />
+        </div>
+
+        <div style={{ ...card, marginTop: "20px", overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ background: "#f5f5f5" }}>
+                <th>Tutor</th>
+                <th>Pet</th>
+                <th>Especialidade</th>
+                <th>Data</th>
+                <th>Horário</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {filtrados.map((item) => (
+                <tr key={item.id} style={{ borderBottom: "1px solid #ddd" }}>
+                  <td>{item.nome}</td>
+                  <td>{item.pet}</td>
+                  <td>{item.especialidade}</td>
+                  <td>{item.data}</td>
+                  <td>{item.horario}</td>
+                  <td>{item.status}</td>
+
+                  <td>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <button
+                        style={botao("#2e7d32")}
+                        onClick={() => alterarStatus(item.id, "confirmado")}
+                      >
+                        Confirmar
+                      </button>
+
+                      <button
+                        style={botao("#c62828")}
+                        onClick={() => alterarStatus(item.id, "cancelado")}
+                      >
+                        Cancelar
+                      </button>
+
+                      <button
+                        style={botao("#1565c0")}
+                        onClick={() => alterarStatus(item.id, "finalizado")}
+                      >
+                        Finalizar
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
       </div>
