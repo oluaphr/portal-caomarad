@@ -53,6 +53,11 @@ export default function AdminPage() {
   };
 
   const filtrados = agendamentos.filter((item) => {
+    const pendentes = agendamentos.filter(a => a.status === "pendente").length;
+const confirmados = agendamentos.filter(a => a.status === "confirmado").length;
+const cancelados = agendamentos.filter(a => a.status === "cancelado").length;
+const finalizados = agendamentos.filter(a => a.status === "finalizado").length;
+const total = agendamentos.length;
     const termo = busca.toLowerCase();
 
     return (
@@ -78,6 +83,39 @@ export default function AdminPage() {
       }}
     >
       <div style={{ maxWidth: "1500px", margin: "0 auto" }}>
+<div
+  style={{
+    display: "grid",
+    gridTemplateColumns: "repeat(5, 1fr)",
+    gap: "15px",
+    marginBottom: "20px"
+  }}
+>
+  <div style={card}>
+    <h3>📊 Total</h3>
+    <h1>{total}</h1>
+  </div>
+
+  <div style={card}>
+    <h3>🟡 Pendentes</h3>
+    <h1>{pendentes}</h1>
+  </div>
+
+  <div style={card}>
+    <h3>🟢 Confirmados</h3>
+    <h1>{confirmados}</h1>
+  </div>
+
+  <div style={card}>
+    <h3>🔴 Cancelados</h3>
+    <h1>{cancelados}</h1>
+  </div>
+
+  <div style={card}>
+    <h3>🔵 Finalizados</h3>
+    <h1>{finalizados}</h1>
+  </div>
+</div>
   <div style={card}>
   <div
     style={{

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
-const [mostrarWhatsapp, setMostrarWhatsapp] = useState(false);
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -34,6 +33,8 @@ const horariosDisponiveis = [
 export default function Home() {
   const [status, setStatus] = useState("");
   const [horariosOcupados, setHorariosOcupados] = useState([]);
+  const [mostrarWhatsapp, setMostrarWhatsapp] = useState(false);
+
 
   const [form, setForm] = useState({
     nome: "",
