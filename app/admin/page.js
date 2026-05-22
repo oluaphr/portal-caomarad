@@ -202,13 +202,22 @@ export default function AdminPage() {
               localStorage.removeItem("adminLogado");
               router.push("/admin/login");
             }}
-            style={{ background: "#c62828", color: "#fff", border: "none", padding: "12px 18px", borderRadius: 12 }}
+           style={{
+  background: "#d32f2f",
+  color: "#fff",
+  border: "none",
+  padding: "12px 20px",
+  borderRadius: 14,
+  fontWeight: "bold",
+  cursor: "pointer",
+  boxShadow: "0 6px 14px rgba(211,47,47,.25)"
+}}
           >
             <LogOut size={16} /> Sair
           </button>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 15, marginBottom: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 15, marginBottom: 20 }}>
           <div style={card}><h3>📊 Total</h3><h1>{total}</h1></div>
           <div style={card}><h3>🟡 Pendentes</h3><h1>{pendentes}</h1></div>
           <div style={card}><h3>🟢 Confirmados</h3><h1>{confirmados}</h1></div>
@@ -254,9 +263,9 @@ export default function AdminPage() {
         </div>
 
         <div style={{ ...card, overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "1200px" }}>
             <thead>
-              <tr style={{ background: "#1565c0", color: "#fff" }}>
+              <tr style={{ background: "#1565c0", color: "#fff", position: "sticky", top: 0, zIndex: 2 }}>
                 <th style={{ padding: 12 }}>Tutor</th>
                 <th>CPF</th>
                 <th>WhatsApp</th>
@@ -286,11 +295,11 @@ export default function AdminPage() {
                   <td><span style={badge(item.status)}>{item.status}</span></td>
                   <td>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                      <button onClick={() => setDetalhe(item)}><Eye size={14} /></button>
-                      <button onClick={() => abrirWhatsApp(item)}><MessageCircle size={14} /></button>
-                      <button onClick={() => alterarStatus(item.id, "confirmado")}>Confirmar</button>
-                      <button onClick={() => alterarStatus(item.id, "cancelado")}>Cancelar</button>
-                      <button onClick={() => alterarStatus(item.id, "finalizado")}>Finalizar</button>
+                     <button title="Ver detalhes" onClick={() => setDetalhe(item)}>👁️</button>
+<button title="WhatsApp" onClick={() => abrirWhatsApp(item)}>💬</button>
+<button title="Confirmar" onClick={() => alterarStatus(item.id, "confirmado")}>✅</button>
+<button title="Cancelar" onClick={() => alterarStatus(item.id, "cancelado")}>❌</button>
+<button title="Finalizar" onClick={() => alterarStatus(item.id, "finalizado")}>🏁</button>
                     </div>
                   </td>
                 </tr>
