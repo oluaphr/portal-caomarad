@@ -6,14 +6,7 @@ import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import {
-  Search,
-  LogOut,
-  MessageCircle,
-  Eye,
-  FileSpreadsheet,
-  FileText
-} from "lucide-react";
+import { Search, LogOut, MessageCircle, Eye, FileSpreadsheet, FileText } from "lucide-react";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -21,25 +14,16 @@ const supabase = createClient(
 );
 
 const especialidades = [
-  "Neurologista",
-  "Ultrassom",
-  "Dermatologista",
-  "Gastro",
-  "Oftalmologista",
-  "Felinos",
-  "Endócrino",
-  "Cardiologista",
-  "Hematologista (Particular)",
-  "Oncologista",
-  "Ortopedista",
-  "Pneumologista",
-  "Nefrologista"
+  "Neurologista", "Ultrassom", "Dermatologista", "Gastro", "Oftalmologista",
+  "Felinos", "Endócrino", "Cardiologista", "Hematologista (Particular)",
+  "Oncologista", "Ortopedista", "Pneumologista", "Nefrologista"
 ];
 
 export default function AdminPage() {
   const router = useRouter();
 
   const [agendamentos, setAgendamentos] = useState([]);
+  const [horariosAdmin, setHorariosAdmin] = useState([]);
   const [busca, setBusca] = useState("");
   const [especialidadeFiltro, setEspecialidadeFiltro] = useState("");
   const [statusFiltro, setStatusFiltro] = useState("");
@@ -47,41 +31,91 @@ export default function AdminPage() {
   const [detalhe, setDetalhe] = useState(null);
   const [msg, setMsg] = useState("");
 
+  const [horarioForm, setHorarioForm] = useState({
+    especialidade: "",
+    data: "",
+    horario: ""
+  });
+
+  const card = {
+    background: "#fff",
+    padding: "20px",
+    borderRadius: "18px",
+    boxShadow: "0 8px 22px rgba(0,0,0,.08)"
+  };
+
   const carregarAgendamentos = async () => {
-    let query = supabase
+    const { data } = await supabase
       .from("agendamentos")
       .select("*")
       .order("created_at", { ascending: false });
 
-    const { data } = await query;
     setAgendamentos(data || []);
   };
 
-  useEffect(() => {
-  const verificarSessao = async () => {
-    const { data } = await supabase.auth.getSession();
+  const carregarHorarios = async () => {
+    const { data } = await supabase
+      .from("horarios_disponiveis")
+      .select("*")
+      .order("data", { ascending: false })
+      .order("horario", { ascending: true });
 
-    if (!data.session) {
-      router.push("/admin/login");
+    setHorariosAdmin(data || []);
+  };
+
+  useEffect(() => {
+    const verificarSessao = async () => {
+      const { data } = await supabase.auth.getSession();
+
+      if (!data.session) {
+        router.push("/admin/login");
+        return;
+      }
+
+      carregarAgendamentos();
+      carregarHorarios();
+    };
+
+    verificarSessao();
+  }, []);
+
+  const alterarStatus = async (id, novoStatus) => {
+    await supabase.from("agendamentos").update({ status: novoStatus }).eq("id", id);
+    setMsg("Status atualizado com sucesso!");
+    carregarAgendamentos();
+    setTimeout(() => setMsg(""), 3000);
+  };
+
+  const liberarHorario = async () => {
+    if (!horarioForm.especialidade || !horarioForm.data || !horarioForm.horario) {
+      setMsg("Preencha especialidade, data e horário.");
       return;
     }
 
-    carregarAgendamentos();
-  };
+    const { error } = await supabase.from("horarios_disponiveis").upsert(
+      [{
+        especialidade: horarioForm.especialidade,
+        data: horarioForm.data,
+        horario: horarioForm.horario,
+        ativo: true
+      }],
+      { onConflict: "especialidade,data,horario" }
+    );
 
-  verificarSessao();
-}, []);
-
-  const alterarStatus = async (id, novoStatus) => {
-    await supabase
-      .from("agendamentos")
-      .update({ status: novoStatus })
-      .eq("id", id);
-
-    setMsg("Status atualizado com sucesso!");
-    carregarAgendamentos();
+    if (error) {
+      setMsg("Erro ao liberar horário: " + error.message);
+    } else {
+      setMsg("Horário liberado com sucesso!");
+      setHorarioForm({ especialidade: "", data: "", horario: "" });
+      carregarHorarios();
+    }
 
     setTimeout(() => setMsg(""), 3000);
+  };
+
+  const alternarHorario = async (id, ativoAtual) => {
+    await supabase.from("horarios_disponiveis").update({ ativo: !ativoAtual }).eq("id", id);
+    carregarHorarios();
   };
 
   const filtrados = agendamentos.filter((item) => {
@@ -92,12 +126,8 @@ export default function AdminPage() {
       item.pet?.toLowerCase().includes(termo) ||
       item.cpf?.toLowerCase().includes(termo);
 
-    const espOk = especialidadeFiltro
-      ? item.especialidade === especialidadeFiltro
-      : true;
-
+    const espOk = especialidadeFiltro ? item.especialidade === especialidadeFiltro : true;
     const statusOk = statusFiltro ? item.status === statusFiltro : true;
-
     const dataOk = dataFiltro ? item.data === dataFiltro : true;
 
     return buscaOk && espOk && statusOk && dataOk;
@@ -110,24 +140,7 @@ export default function AdminPage() {
   const finalizados = agendamentos.filter((a) => a.status === "finalizado").length;
 
   const exportarExcel = () => {
-    const dados = filtrados.map((a) => ({
-      Tutor: a.nome,
-      CPF: a.cpf,
-      WhatsApp: a.whatsapp,
-      Pet: a.pet,
-      Espécie: a.especie,
-      Raça: a.raca,
-      Idade: a.idade,
-      Convênio: a.convenio,
-      Nome_Convênio: a.nomeconvenio,
-      CHIP: a.chip,
-      Especialidade: a.especialidade,
-      Data: a.data,
-      Horário: a.horario,
-      Status: a.status
-    }));
-
-    const ws = XLSX.utils.json_to_sheet(dados);
+    const ws = XLSX.utils.json_to_sheet(filtrados);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Agendamentos");
     XLSX.writeFile(wb, "agendamentos-caomarada.xlsx");
@@ -135,7 +148,6 @@ export default function AdminPage() {
 
   const exportarPDF = () => {
     const doc = new jsPDF();
-
     doc.text("Portal Cãomarada - Agendamentos", 14, 15);
 
     autoTable(doc, {
@@ -178,13 +190,6 @@ export default function AdminPage() {
     };
   };
 
-  const card = {
-    background: "#fff",
-    padding: "20px",
-    borderRadius: "18px",
-    boxShadow: "0 8px 22px rgba(0,0,0,.08)"
-  };
-
   return (
     <main style={{ minHeight: "100vh", background: "#eef5fb", padding: 30, fontFamily: "Arial" }}>
       <div style={{ maxWidth: 1600, margin: "0 auto" }}>
@@ -203,19 +208,18 @@ export default function AdminPage() {
 
           <button
             onClick={async () => {
-  await supabase.auth.signOut();
-  router.push("/admin/login");
-}}
-           style={{
-  background: "#d32f2f",
-  color: "#fff",
-  border: "none",
-  padding: "12px 20px",
-  borderRadius: 14,
-  fontWeight: "bold",
-  cursor: "pointer",
-  boxShadow: "0 6px 14px rgba(211,47,47,.25)"
-}}
+              await supabase.auth.signOut();
+              router.push("/admin/login");
+            }}
+            style={{
+              background: "#d32f2f",
+              color: "#fff",
+              border: "none",
+              padding: "12px 20px",
+              borderRadius: 14,
+              fontWeight: "bold",
+              cursor: "pointer"
+            }}
           >
             <LogOut size={16} /> Sair
           </button>
@@ -227,6 +231,83 @@ export default function AdminPage() {
           <div style={card}><h3>🟢 Confirmados</h3><h1>{confirmados}</h1></div>
           <div style={card}><h3>🔴 Cancelados</h3><h1>{cancelados}</h1></div>
           <div style={card}><h3>🔵 Finalizados</h3><h1>{finalizados}</h1></div>
+        </div>
+
+        <div style={{ ...card, marginBottom: 20 }}>
+          <h2 style={{ color: "#1565c0" }}>Liberar Horários por Especialidade</h2>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: 12, marginTop: 15 }}>
+            <select
+              value={horarioForm.especialidade}
+              onChange={(e) => setHorarioForm({ ...horarioForm, especialidade: e.target.value })}
+              style={{ padding: 12 }}
+            >
+              <option value="">Especialidade</option>
+              {especialidades.map((e) => <option key={e}>{e}</option>)}
+            </select>
+
+            <input
+              type="date"
+              value={horarioForm.data}
+              onChange={(e) => setHorarioForm({ ...horarioForm, data: e.target.value })}
+              style={{ padding: 12 }}
+            />
+
+            <input
+              type="time"
+              value={horarioForm.horario}
+              onChange={(e) => setHorarioForm({ ...horarioForm, horario: e.target.value })}
+              style={{ padding: 12 }}
+            />
+
+            <button
+              onClick={liberarHorario}
+              style={{ padding: "12px 18px", background: "#1565c0", color: "#fff", border: "none", borderRadius: 10 }}
+            >
+              Liberar
+            </button>
+          </div>
+
+          <div style={{ marginTop: 20, overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ background: "#eef5fb" }}>
+                  <th>Especialidade</th>
+                  <th>Data</th>
+                  <th>Horário</th>
+                  <th>Status</th>
+                  <th>Ação</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {horariosAdmin.map((h) => (
+                  <tr key={h.id} style={{ borderBottom: "1px solid #ddd" }}>
+                    <td>{h.especialidade}</td>
+                    <td>{h.data}</td>
+                    <td>{h.horario}</td>
+                    <td style={{ color: h.ativo ? "#2e7d32" : "#c62828", fontWeight: "bold" }}>
+                      {h.ativo ? "Ativo" : "Bloqueado"}
+                    </td>
+                    <td>
+                      <button
+                        onClick={() => alternarHorario(h.id, h.ativo)}
+                        style={{
+                          padding: "8px 12px",
+                          background: h.ativo ? "#c62828" : "#2e7d32",
+                          color: "#fff",
+                          border: "none",
+                          borderRadius: 8
+                        }}
+                      >
+                        {h.ativo ? "Bloquear" : "Ativar"}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         <div style={{ ...card, marginBottom: 20, display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 12 }}>
@@ -269,8 +350,8 @@ export default function AdminPage() {
         <div style={{ ...card, overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "1200px" }}>
             <thead>
-              <tr style={{ background: "#1565c0", color: "#fff", position: "sticky", top: 0, zIndex: 2 }}>
-                <th style={{ padding: 12 }}>Tutor</th>
+              <tr style={{ background: "#1565c0", color: "#fff" }}>
+                <th>Tutor</th>
                 <th>CPF</th>
                 <th>WhatsApp</th>
                 <th>Pet</th>
@@ -287,7 +368,7 @@ export default function AdminPage() {
             <tbody>
               {filtrados.map((item, index) => (
                 <tr key={item.id} style={{ background: index % 2 === 0 ? "#fff" : "#f7fbff", borderBottom: "1px solid #ddd" }}>
-                  <td style={{ padding: 10 }}>{item.nome}</td>
+                  <td>{item.nome}</td>
                   <td>{item.cpf}</td>
                   <td>{item.whatsapp}</td>
                   <td>{item.pet}</td>
@@ -298,13 +379,11 @@ export default function AdminPage() {
                   <td>{item.chip || "-"}</td>
                   <td><span style={badge(item.status)}>{item.status}</span></td>
                   <td>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                     <button title="Ver detalhes" onClick={() => setDetalhe(item)}>👁️</button>
-<button title="WhatsApp" onClick={() => abrirWhatsApp(item)}>💬</button>
-<button title="Confirmar" onClick={() => alterarStatus(item.id, "confirmado")}>✅</button>
-<button title="Cancelar" onClick={() => alterarStatus(item.id, "cancelado")}>❌</button>
-<button title="Finalizar" onClick={() => alterarStatus(item.id, "finalizado")}>🏁</button>
-                    </div>
+                    <button onClick={() => setDetalhe(item)}>👁️</button>
+                    <button onClick={() => abrirWhatsApp(item)}>💬</button>
+                    <button onClick={() => alterarStatus(item.id, "confirmado")}>✅</button>
+                    <button onClick={() => alterarStatus(item.id, "cancelado")}>❌</button>
+                    <button onClick={() => alterarStatus(item.id, "finalizado")}>🏁</button>
                   </td>
                 </tr>
               ))}
@@ -327,11 +406,6 @@ export default function AdminPage() {
               <p><b>CPF:</b> {detalhe.cpf}</p>
               <p><b>WhatsApp:</b> {detalhe.whatsapp}</p>
               <p><b>Pet:</b> {detalhe.pet}</p>
-              <p><b>Espécie:</b> {detalhe.especie}</p>
-              <p><b>Raça:</b> {detalhe.raca}</p>
-              <p><b>Idade:</b> {detalhe.idade}</p>
-              <p><b>Convênio:</b> {detalhe.nomeconvenio || detalhe.convenio}</p>
-              <p><b>CHIP:</b> {detalhe.chip || "-"}</p>
               <p><b>Especialidade:</b> {detalhe.especialidade}</p>
               <p><b>Data:</b> {detalhe.data}</p>
               <p><b>Horário:</b> {detalhe.horario}</p>
