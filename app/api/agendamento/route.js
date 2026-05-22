@@ -6,6 +6,7 @@ export async function POST(req) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     const resendKey = process.env.RESEND_API_KEY;
+    console.log("RESEND KEY:", resendKey?.slice(0, 10));
 
     if (!supabaseUrl || !supabaseKey || !resendKey) {
       return Response.json(
@@ -31,7 +32,7 @@ export async function POST(req) {
     }
 
     await resend.emails.send({
-      from: "Portal Cãomarada <noreply@vetcaomarada.com.br>",
+      from: "onboarding@resend.dev",
       to: ["atendimento@vetcaomarada.com.br"],
       subject: "Novo agendamento - Portal Cãomarada",
       html: `
