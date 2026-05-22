@@ -252,10 +252,6 @@ if (error) {
                 <option key={esp}>{esp}</option>
               ))}
             </select>
-<p style={{ color: "#1565c0", fontWeight: "bold" }}>
-  Datas encontradas: {datasDisponiveis.length}
-</p>
-
     <select
   style={inputStyle}
   name="data"
