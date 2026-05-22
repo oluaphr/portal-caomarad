@@ -64,8 +64,9 @@ export default function Home() {
     ]);
 
     if (error) {
-  setStatus("Erro: " + error.message);
-} else {
+  console.error(error);
+  setStatus("ERRO REAL: " + error.message);
+}  else {
       setStatus("Agendamento realizado com sucesso!");
     }
   };
