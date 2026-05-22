@@ -31,11 +31,7 @@ export async function POST(req) {
       );
     }
 
-    await resend.emails.send({
-      from: "onboarding@resend.dev",
-      to: ["atendimento@vetcaomarada.com.br"],
-      subject: "Novo agendamento - Portal Cãomarada",
-      html: `
+ 
         <h2>Novo Agendamento</h2>
         <p><strong>Tutor:</strong> ${body.nome}</p>
         <p><strong>CPF:</strong> ${body.cpf}</p>
