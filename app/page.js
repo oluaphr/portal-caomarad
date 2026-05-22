@@ -64,8 +64,8 @@ export default function Home() {
     ]);
 
     if (error) {
-      setStatus("Erro ao enviar agendamento.");
-    } else {
+  setStatus("Erro: " + error.message);
+} else {
       setStatus("Agendamento realizado com sucesso!");
     }
   };
