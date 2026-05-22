@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -9,6 +10,7 @@ const supabase = createClient(
 );
 
 export default function AdminPage() {
+  const router = useRouter();	
   const [agendamentos, setAgendamentos] = useState([]);
   const [busca, setBusca] = useState("");
   const [especialidadeFiltro, setEspecialidadeFiltro] = useState("");
@@ -31,8 +33,15 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    carregarAgendamentos();
-  }, [especialidadeFiltro]);
+  const logado = localStorage.getItem("adminLogado");
+
+  if (!logado) {
+    router.push("/admin/login");
+    return;
+  }
+
+  carregarAgendamentos();
+}, [especialidadeFiltro]);
 
   const alterarStatus = async (id, novoStatus) => {
     await supabase
@@ -59,7 +68,6 @@ export default function AdminPage() {
     borderRadius: "16px",
     boxShadow: "0 8px 20px rgba(0,0,0,0.08)"
   };
-
   return (
     <main
       style={{
@@ -70,10 +78,37 @@ export default function AdminPage() {
       }}
     >
       <div style={{ maxWidth: "1500px", margin: "0 auto" }}>
-        <div style={card}>
-          <h1 style={{ color: "#1565c0" }}>Painel Administrativo</h1>
-          <p>Portal Cãomarada</p>
-        </div>
+  <div style={card}>
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center"
+    }}
+  >
+    <div>
+      <h1 style={{ color: "#1565c0" }}>Painel Administrativo</h1>
+      <p>Portal Cãomarada</p>
+    </div>
+
+    <button
+      onClick={() => {
+        localStorage.removeItem("adminLogado");
+        router.push("/admin/login");
+      }}
+      style={{
+        padding: "10px 16px",
+        background: "#d32f2f",
+        color: "#fff",
+        border: "none",
+        borderRadius: "10px",
+        cursor: "pointer"
+      }}
+    >
+      Sair
+    </button>
+  </div>
+</div>
 
         <div
           style={{
