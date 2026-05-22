@@ -3,6 +3,20 @@
 import { useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 
+
+    const { data } = await supabase
+      .from("agendamentos")
+      .select("horario")
+      .eq("data", form.data)
+      .eq("especialidade", form.especialidade)
+      .neq("status", "cancelado");
+
+    setHorariosOcupados(data?.map((item) => item.horario) || []);
+  };
+
+  buscarHorarios();
+}, [form.data, form.especialidade]);
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -26,6 +40,23 @@ const especialidades = [
 
 export default function Home() {
   const [status, setStatus] = useState("");
+  const [horariosOcupados, setHorariosOcupados] = useState([]);
+  useEffect(() => {
+  const buscarHorarios = async () => {
+    if (!form.data || !form.especialidade) return;
+
+    const { data } = await supabase
+      .from("agendamentos")
+      .select("horario")
+      .eq("data", form.data)
+      .eq("especialidade", form.especialidade)
+      .neq("status", "cancelado");
+
+    setHorariosOcupados(data?.map((item) => item.horario) || []);
+  };
+
+  buscarHorarios();
+}, [form.data, form.especialidade]);
 
   const [form, setForm] = useState({
     nome: "",
@@ -43,7 +74,33 @@ export default function Home() {
     data: "",
     horario: ""
   });
-
+const horariosDisponiveis = [
+  "08:00",
+  "08:30",
+  "09:00",
+  "09:30",
+  "10:00",
+  "10:30",
+  "11:00",
+  "11:30",
+  "12:00",
+  "12:30",
+  "13:00",
+  "13:30",
+  "14:00",
+  "14:30",
+  "15:00",
+  "15:30",
+  "16:00",
+  "16:30",
+  "17:00",
+  "17:30",
+  "18:00",
+  "18:30",
+  "19:00",
+  "19:30",
+  "20:00"
+];
   const handleChange = (e) => {
     setForm({
       ...form,
@@ -228,8 +285,8 @@ export default function Home() {
               value={form.convenio}
               onChange={handleChange}
             >
-              <option>Convênio? Não</option>
-              <option>Convênio? Sim</option>
+             <option value="Não">Convênio? Não</option>
+             <option value="Sim">Convênio? Sim</option>
             </select>
 
             {form.convenio.includes("Sim") && (
@@ -271,15 +328,28 @@ export default function Home() {
               onChange={handleChange}
               required
             />
+	<select
+  style={inputStyle}
+  name="horario"
+  value={form.horario}
+  onChange={handleChange}
+  required
+>
+  <option value="">Selecione o horário</option>
 
-            <input
-              style={inputStyle}
-              type="time"
-              name="horario"
-              value={form.horario}
-              onChange={handleChange}
-              required
-            />
+  {horariosDisponiveis.map((hora) => (
+    <option
+      key={hora}
+      value={hora}
+      disabled={horariosOcupados.includes(hora)}
+    >
+      {horariosOcupados.includes(hora)
+        ? `${hora} (ocupado)`
+        : hora}
+    </option>
+  ))}
+</select>
+    
           </div>
 
           <button
