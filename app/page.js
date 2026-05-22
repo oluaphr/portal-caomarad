@@ -132,13 +132,44 @@ export default function Home() {
       <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
         <form
           onSubmit={handleSubmit}
-          style={{
-            background: "#fff",
-            padding: "35px",
-            borderRadius: "20px"
-          }}
+         style={{
+  background: "#fff",
+  padding: "35px",
+  borderRadius: "24px",
+  boxShadow: "0 12px 30px rgba(0,0,0,.08)"
+}}
         >
-          <h2>Agendamento Online</h2>
+<div
+  style={{
+    background: "#fff",
+    padding: "25px",
+    borderRadius: "20px",
+    marginBottom: "25px",
+    textAlign: "center",
+    boxShadow: "0 8px 22px rgba(0,0,0,.08)"
+  }}
+>
+  <img
+    src="/logo-caomarada.png"
+    alt="Centro Veterinário Cãomarada"
+    style={{
+      maxWidth: "420px",
+      width: "100%",
+      height: "auto"
+    }}
+  />
+
+  <p
+    style={{
+      fontWeight: "bold",
+      color: "#1565c0",
+      marginTop: "10px"
+    }}
+  >
+    Agendamento Online • Atendimento 24 horas
+  </p>
+</div>
+        
 
           <div
             style={{
@@ -198,14 +229,17 @@ export default function Home() {
           <button
             type="submit"
             style={{
-              marginTop: "30px",
-              width: "100%",
-              padding: "16px",
-              background: "#f39c12",
-              color: "#fff",
-              border: "none",
-              borderRadius: "12px"
-            }}
+  marginTop: "30px",
+  width: "100%",
+  padding: "16px",
+  background: "linear-gradient(135deg, #1565c0, #42a5f5)",
+  color: "#fff",
+  border: "none",
+  borderRadius: "12px",
+  fontWeight: "bold",
+  fontSize: "16px",
+  cursor: "pointer"
+}}
           >
             Solicitar Agendamento
           </button>
