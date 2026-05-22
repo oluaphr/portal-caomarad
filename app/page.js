@@ -23,12 +23,7 @@ const especialidades = [
   "Nefrologista"
 ];
 
-const horariosDisponiveis = [
-  "08:00","08:30","09:00","09:30","10:00","10:30",
-  "11:00","11:30","12:00","12:30","13:00","13:30",
-  "14:00","14:30","15:00","15:30","16:00","16:30",
-  "17:00","17:30","18:00","18:30","19:00","19:30","20:00"
-];
+const [horariosLiberados, setHorariosLiberados] = useState([]);
 
 export default function Home() {
   const [status, setStatus] = useState("");
@@ -54,24 +49,34 @@ export default function Home() {
   });
 
   useEffect(() => {
-    const buscarHorarios = async () => {
-      if (!form.data || !form.especialidade) {
-        setHorariosOcupados([]);
-        return;
-      }
+  const buscarHorarios = async () => {
+    if (!form.data || !form.especialidade) {
+      setHorariosLiberados([]);
+      setHorariosOcupados([]);
+      return;
+    }
 
-      const { data } = await supabase
-        .from("agendamentos")
-        .select("horario")
-        .eq("data", form.data)
-        .eq("especialidade", form.especialidade)
-        .neq("status", "cancelado");
+    const { data: liberados } = await supabase
+      .from("horarios_disponiveis")
+      .select("horario")
+      .eq("data", form.data)
+      .eq("especialidade", form.especialidade)
+      .eq("ativo", true)
+      .order("horario", { ascending: true });
 
-      setHorariosOcupados(data?.map((item) => item.horario) || []);
-    };
+    const { data: ocupados } = await supabase
+      .from("agendamentos")
+      .select("horario")
+      .eq("data", form.data)
+      .eq("especialidade", form.especialidade)
+      .neq("status", "cancelado");
 
-    buscarHorarios();
-  }, [form.data, form.especialidade]);
+    setHorariosLiberados(liberados?.map((item) => item.horario) || []);
+    setHorariosOcupados(ocupados?.map((item) => item.horario) || []);
+  };
+
+  buscarHorarios();
+}, [form.data, form.especialidade]);
 
   const handleChange = (e) => {
     setForm({
@@ -213,15 +218,23 @@ export default function Home() {
             <input style={inputStyle} type="date" name="data" onChange={handleChange} required />
 
             <select style={inputStyle} name="horario" onChange={handleChange} required>
-              <option value="">Selecione o horário</option>
-              {horariosDisponiveis.map((hora) => (
-                <option
-                  key={hora}
-                  value={hora}
-                  disabled={horariosOcupados.includes(hora)}
-                >
-                  {horariosOcupados.includes(hora) ? `${hora} (ocupado)` : hora}
-                </option>
+             <option value="">
+  {horariosLiberados.length === 0
+    ? "Nenhum horário liberado"
+    : "Selecione o horário"}
+</option>
+
+{horariosLiberados.map((hora) => (
+  <option
+    key={hora}
+    value={hora}
+    disabled={horariosOcupados.includes(hora)}
+  >
+    {horariosOcupados.includes(hora)
+      ? `${hora} (ocupado)`
+      : hora}
+  </option>
+))}
               ))}
             </select>
           </div>
