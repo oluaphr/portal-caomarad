@@ -29,7 +29,7 @@ export default function Home() {
   const [horariosOcupados, setHorariosOcupados] = useState([]);
   const [horariosLiberados, setHorariosLiberados] = useState([]);
   const [mostrarWhatsapp, setMostrarWhatsapp] = useState(false);
-
+  const [datasDisponiveis, setDatasDisponiveis] = useState([]);
 
   const [form, setForm] = useState({
     nome: "",
@@ -47,6 +47,31 @@ export default function Home() {
     data: "",
     horario: ""
   });
+useEffect(() => {
+  const buscarDatas = async () => {
+    if (!form.especialidade) {
+      setDatasDisponiveis([]);
+      return;
+    }
+
+  const { data, error } = await supabase
+  .from("horarios_disponiveis")
+  .select("data, especialidade, ativo")
+  .ilike("especialidade", form.especialidade)
+  .eq("ativo", true)
+  .order("data", { ascending: true });
+
+if (error) {
+  console.log("Erro ao buscar datas:", error.message);
+}
+
+    const datasUnicas = [...new Set((data || []).map((item) => item.data))];
+
+    setDatasDisponiveis(datasUnicas);
+  };
+
+  buscarDatas();
+}, [form.especialidade]);
 
   useEffect(() => {
   const buscarHorarios = async () => {
@@ -208,18 +233,70 @@ export default function Home() {
 
             <input style={inputStyle} name="chip" placeholder="Número do CHIP" onChange={handleChange} />
 
-            <select style={inputStyle} name="especialidade" onChange={handleChange} required>
+            <select
+  style={inputStyle}
+  name="especialidade"
+  value={form.especialidade}
+  onChange={(e) =>
+    setForm({
+      ...form,
+      especialidade: e.target.value,
+      data: "",
+      horario: ""
+    })
+  }
+  required
+>
               <option value="">Selecione a especialidade</option>
               {especialidades.map((esp) => (
                 <option key={esp}>{esp}</option>
               ))}
             </select>
+<p style={{ color: "#1565c0", fontWeight: "bold" }}>
+  Datas encontradas: {datasDisponiveis.length}
+</p>
 
-            <input style={inputStyle} type="date" name="data" onChange={handleChange} required />
-
-          <select style={inputStyle} name="horario" onChange={handleChange} required>
+    <select
+  style={inputStyle}
+  name="data"
+  value={form.data}
+  onChange={(e) =>
+    setForm({
+      ...form,
+      data: e.target.value,
+      horario: ""
+    })
+  }
+  required
+  disabled={!form.especialidade}
+>
   <option value="">
-    {horariosLiberados.length === 0
+    {!form.especialidade
+      ? "Selecione uma especialidade primeiro"
+      : datasDisponiveis.length === 0
+      ? "Nenhuma data disponível"
+      : "Selecione a data"}
+  </option>
+
+  {datasDisponiveis.map((data) => (
+    <option key={data} value={data}>
+      {data.split("-").reverse().join("/")}
+    </option>
+  ))}
+</select>
+
+          <select
+  style={inputStyle}
+  name="horario"
+  value={form.horario}
+  onChange={handleChange}
+  required
+  disabled={!form.data}
+>
+  <option value="">
+    {!form.data
+      ? "Selecione uma data primeiro"
+      : horariosLiberados.length === 0
       ? "Nenhum horário liberado"
       : "Selecione o horário"}
   </option>
