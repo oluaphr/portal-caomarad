@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
-
+const [mostrarWhatsapp, setMostrarWhatsapp] = useState(false);
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -116,6 +116,7 @@ export default function Home() {
     setStatus("Erro: " + result.error);
   } else {
     setStatus("Agendamento realizado com sucesso!");
+    setMostrarWhatsapp(true);
   }
 };
   const inputStyle = {
@@ -209,6 +210,27 @@ export default function Home() {
           </button>
 
           <p>{status}</p>
+{mostrarWhatsapp && (
+  <a
+    href={`https://wa.me/5511991230407?text=${encodeURIComponent(
+      "Olá! Acabei de solicitar um agendamento no Portal Cãomarada."
+    )}`}
+    target="_blank"
+    style={{
+      display: "block",
+      marginTop: "20px",
+      padding: "16px",
+      textAlign: "center",
+      background: "#25D366",
+      color: "#fff",
+      borderRadius: "12px",
+      textDecoration: "none",
+      fontWeight: "bold"
+    }}
+  >
+    📱 Confirmar no WhatsApp
+  </a>
+)}
         </form>
       </div>
     </main>
