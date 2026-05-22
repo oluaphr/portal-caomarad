@@ -18,7 +18,14 @@ const especialidades = [
   "Felinos", "Endócrino", "Cardiologista", "Hematologista (Particular)",
   "Oncologista", "Ortopedista", "Pneumologista", "Nefrologista"
 ];
-
+const horariosPadrao = [
+  "08:00","08:30","09:00","09:30",
+  "10:00","10:30","11:00","11:30",
+  "12:00","12:30","13:00","13:30",
+  "14:00","14:30","15:00","15:30",
+  "16:00","16:30","17:00","17:30",
+  "18:00","18:30","19:00","19:30","20:00"
+];
 export default function AdminPage() {
   const router = useRouter();
 
@@ -31,11 +38,11 @@ export default function AdminPage() {
   const [detalhe, setDetalhe] = useState(null);
   const [msg, setMsg] = useState("");
 
-  const [horarioForm, setHorarioForm] = useState({
-    especialidade: "",
-    data: "",
-    horario: ""
-  });
+ const [horarioForm, setHorarioForm] = useState({
+  especialidade: "",
+  data: "",
+  horarios: []
+});
 
   const card = {
     background: "#fff",
@@ -86,32 +93,45 @@ export default function AdminPage() {
     setTimeout(() => setMsg(""), 3000);
   };
 
-  const liberarHorario = async () => {
-    if (!horarioForm.especialidade || !horarioForm.data || !horarioForm.horario) {
-      setMsg("Preencha especialidade, data e horário.");
-      return;
-    }
+const liberarHorario = async () => {
+  if (
+    !horarioForm.especialidade ||
+    !horarioForm.data ||
+    horarioForm.horarios.length === 0
+  ) {
+    setMsg("Selecione especialidade, data e pelo menos um horário.");
+    return;
+  }
 
-    const { error } = await supabase.from("horarios_disponiveis").upsert(
-      [{
-        especialidade: horarioForm.especialidade,
-        data: horarioForm.data,
-        horario: horarioForm.horario,
-        ativo: true
-      }],
-      { onConflict: "especialidade,data,horario", ignoreDuplicates: false }
-    );
+  const payload = horarioForm.horarios.map((hora) => ({
+    especialidade: horarioForm.especialidade,
+    data: horarioForm.data,
+    horario: hora,
+    ativo: true
+  }));
 
-    if (error) {
-      setMsg("Erro ao liberar horário: " + error.message);
-    } else {
-      setMsg("Horário liberado com sucesso!");
-      setHorarioForm({ especialidade: "", data: "", horario: "" });
-      carregarHorarios();
-    }
+  const { error } = await supabase
+    .from("horarios_disponiveis")
+    .upsert(payload, {
+      onConflict: "especialidade,data,horario",
+      ignoreDuplicates: false
+    });
 
-    setTimeout(() => setMsg(""), 3000);
-  };
+  if (error) {
+    setMsg("Erro: " + error.message);
+  } else {
+    setMsg("Horários liberados com sucesso!");
+    setHorarioForm({
+      especialidade: "",
+      data: "",
+      horarios: []
+    });
+
+    carregarHorarios();
+  }
+
+  setTimeout(() => setMsg(""), 3000);
+};
 
   const alternarHorario = async (id, ativoAtual) => {
     await supabase.from("horarios_disponiveis").update({ ativo: !ativoAtual }).eq("id", id);
@@ -236,7 +256,14 @@ export default function AdminPage() {
         <div style={{ ...card, marginBottom: 20 }}>
           <h2 style={{ color: "#1565c0" }}>Liberar Horários por Especialidade</h2>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto", gap: 12, marginTop: 15 }}>
+        <div
+  style={{
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: 12,
+    marginTop: 15
+  }}
+>
             <select
               value={horarioForm.especialidade}
               onChange={(e) => setHorarioForm({ ...horarioForm, especialidade: e.target.value })}
@@ -253,19 +280,62 @@ export default function AdminPage() {
               style={{ padding: 12 }}
             />
 
-            <input
-              type="time"
-              value={horarioForm.horario}
-              onChange={(e) => setHorarioForm({ ...horarioForm, horario: e.target.value })}
-              style={{ padding: 12 }}
-            />
+           <div
+  style={{
+    gridColumn: "1 / -1",
+    display: "grid",
+    gridTemplateColumns: "repeat(5, 1fr)",
+    gap: 10,
+    marginTop: 10
+  }}
+>
+  {horariosPadrao.map((hora) => (
+    <label
+      key={hora}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        padding: 10,
+        background: "#f5f9ff",
+        borderRadius: 10
+      }}
+    >
+      <input
+        type="checkbox"
+        checked={horarioForm.horarios.includes(hora)}
+        onChange={(e) => {
+          if (e.target.checked) {
+            setHorarioForm({
+              ...horarioForm,
+              horarios: [...horarioForm.horarios, hora]
+            });
+          } else {
+            setHorarioForm({
+              ...horarioForm,
+              horarios: horarioForm.horarios.filter((h) => h !== hora)
+            });
+          }
+        }}
+      />
+      {hora}
+    </label>
+  ))}
+</div>
 
-            <button
-              onClick={liberarHorario}
-              style={{ padding: "12px 18px", background: "#1565c0", color: "#fff", border: "none", borderRadius: 10 }}
-            >
-              Liberar
-            </button>
+         <button
+  onClick={liberarHorario}
+  style={{
+    padding: "12px 18px",
+    background: "#1565c0",
+    color: "#fff",
+    border: "none",
+    borderRadius: 10,
+    gridColumn: "1 / -1"
+  }}
+>
+  Liberar horários selecionados
+</button>
           </div>
 
           <div style={{ marginTop: 20, overflowX: "auto" }}>
