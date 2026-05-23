@@ -1,25 +1,29 @@
 import { createClient } from "@supabase/supabase-js";
 
 const enviarWhatsApp = async (numero, mensagem) => {
-  const url = process.env.EVOLUTION_API_URL;
-  const apiKey = process.env.EVOLUTION_API_KEY;
-  const instance = process.env.EVOLUTION_INSTANCE_NAME;
+  const response = await fetch(
+    `${process.env.EVOLUTION_API_URL}/message/sendText/${process.env.EVOLUTION_INSTANCE_NAME}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: process.env.EVOLUTION_API_KEY
+      },
+      body: JSON.stringify({
+        number: numero,
+        text: mensagem
+      })
+    }
+  );
 
-  if (!url || !apiKey || !instance || !numero) return;
+  const result = await response.text();
 
-  await fetch(`${url}/message/sendText/${instance}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      apikey: apiKey
-    },
-    body: JSON.stringify({
-      number: numero,
-      text: mensagem
-    })
-  });
+  if (!response.ok) {
+    throw new Error(result);
+  }
+
+  return result;
 };
-
 export async function POST(req) {
   try {
     const supabase = createClient(
