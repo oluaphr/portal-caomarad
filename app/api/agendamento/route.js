@@ -86,10 +86,19 @@ Nossa equipe irá validar as informações e, se necessário, entrará em contat
 Centro Veterinário Cãomarada 💙
 Atendimento 24 horas`;
 
-    await enviarWhatsApp(numeroClinica, mensagemClinica);
-    await enviarWhatsApp(numeroClienteFinal, mensagemCliente);
+let whatsappErro = null;
 
-    return Response.json({ success: true });
+try {
+  await enviarWhatsApp(numeroClinica, mensagemClinica);
+  await enviarWhatsApp(numeroClienteFinal, mensagemCliente);
+} catch (erro) {
+  whatsappErro = erro.message;
+}
+
+return Response.json({
+  success: true,
+  whatsappErro
+});
 
   } catch (err) {
     return Response.json(
