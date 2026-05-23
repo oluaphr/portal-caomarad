@@ -76,16 +76,24 @@ Horário: ${body.horario}
 
 Status: Pendente`;
 
-    const mensagemCliente = `Olá, ${body.nome}! 🐾
+    const mensagemCliente = `🐾 Centro Veterinário Cãomarada
 
-Recebemos sua solicitação de agendamento no Centro Veterinário Cãomarada.
+Olá, ${body.nome}!
 
-Pet: ${body.pet}
-Especialidade: ${body.especialidade}
-Data: ${dataFormatada}
-Horário: ${body.horario}
+Recebemos seu pedido de agendamento:
 
-Nossa equipe irá validar as informações e, se necessário, entrará em contato.
+🐶 Pet: ${body.pet}
+🏥 Especialidade: ${body.especialidade}
+📅 Data: ${dataFormatada}
+🕐 Horário: ${body.horario}
+
+Para confirmar este agendamento, responda:
+
+1 ou CONFIRMAR
+
+Para cancelar, responda:
+
+2 ou CANCELAR
 
 Centro Veterinário Cãomarada 💙
 Atendimento 24 horas`;
