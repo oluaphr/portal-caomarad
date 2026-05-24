@@ -1,12 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
-
 const enviarWhatsApp = async (numero, mensagem) => {
-  const response = await fetch(
+  await fetch(
     `${process.env.EVOLUTION_API_URL}/message/sendText/${process.env.EVOLUTION_INSTANCE_NAME}`,
     {
       method: "POST",
@@ -20,8 +15,6 @@ const enviarWhatsApp = async (numero, mensagem) => {
       })
     }
   );
-
-  return response.text();
 };
 
 const formatarNumero = (numero) => {
@@ -31,6 +24,11 @@ const formatarNumero = (numero) => {
 
 export async function POST(req) {
   try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+
     const { id, status } = await req.json();
 
     const { data: agendamento, error: buscarErro } = await supabase

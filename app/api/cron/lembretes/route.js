@@ -1,10 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
-
 const enviarWhatsApp = async (numero, mensagem) => {
   await fetch(
     `${process.env.EVOLUTION_API_URL}/message/sendText/${process.env.EVOLUTION_INSTANCE_NAME}`,
@@ -27,37 +22,44 @@ const formatarNumero = (numero) => {
   return limpo.startsWith("55") ? limpo : `55${limpo}`;
 };
 
-const { searchParams } = new URL(req.url);
-const secret = searchParams.get("secret");
+export async function GET(req) {
+  try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
 
-if (secret !== process.env.CRON_SECRET) {
-  return Response.json({ error: "Não autorizado" }, { status: 401 });
-}
+    const { searchParams } = new URL(req.url);
+    const secret = searchParams.get("secret");
 
-  const hoje = new Date();
-  const amanha = new Date(hoje);
-  amanha.setDate(hoje.getDate() + 1);
+    if (secret !== process.env.CRON_SECRET) {
+      return Response.json({ error: "Não autorizado" }, { status: 401 });
+    }
 
-  const dataAmanha = amanha.toISOString().split("T")[0];
+    const hoje = new Date();
+    const amanha = new Date();
+    amanha.setDate(hoje.getDate() + 1);
 
-  const { data: consultas, error } = await supabase
-    .from("agendamentos")
-    .select("*")
-    .eq("status", "confirmado")
-    .eq("data", dataAmanha)
-    .eq("lembrete_enviado", false);
+    const dataAmanha = amanha.toISOString().split("T")[0];
 
-  if (error) {
-    return Response.json({ error: error.message }, { status: 500 });
-  }
+    const { data: consultas, error } = await supabase
+      .from("agendamentos")
+      .select("*")
+      .eq("status", "confirmado")
+      .eq("data", dataAmanha)
+      .eq("lembrete_enviado", false);
 
-  for (const consulta of consultas || []) {
-    const numero = formatarNumero(consulta.whatsapp);
-    const dataFormatada = consulta.data?.split("-").reverse().join("/");
+    if (error) {
+      return Response.json({ error: error.message }, { status: 500 });
+    }
 
-    await enviarWhatsApp(
-      numero,
-      `🐾 Lembrete de consulta
+    for (const consulta of consultas || []) {
+      const numero = formatarNumero(consulta.whatsapp);
+      const dataFormatada = consulta.data?.split("-").reverse().join("/");
+
+      await enviarWhatsApp(
+        numero,
+        `🐾 Lembrete de consulta
 
 Olá, ${consulta.nome}!
 
@@ -69,16 +71,19 @@ Estamos passando para lembrar da consulta do pet ${consulta.pet} amanhã.
 
 Centro Veterinário Cãomarada 💙
 Atendimento 24 horas`
-    );
+      );
 
-    await supabase
-      .from("agendamentos")
-      .update({ lembrete_enviado: true })
-      .eq("id", consulta.id);
+      await supabase
+        .from("agendamentos")
+        .update({ lembrete_enviado: true })
+        .eq("id", consulta.id);
+    }
+
+    return Response.json({
+      success: true,
+      enviados: consultas?.length || 0
+    });
+  } catch (err) {
+    return Response.json({ error: err.message }, { status: 500 });
   }
-
-  return Response.json({
-    success: true,
-    enviados: consultas?.length || 0
-  });
 }

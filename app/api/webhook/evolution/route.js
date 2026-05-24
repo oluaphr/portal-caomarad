@@ -1,9 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const limparNumero = (numero) => String(numero || "").replace(/\D/g, "");
 
 const enviarWhatsApp = async (numero, mensagem) => {
   await fetch(
@@ -22,10 +19,13 @@ const enviarWhatsApp = async (numero, mensagem) => {
   );
 };
 
-const limparNumero = (numero) => String(numero || "").replace(/\D/g, "");
-
 export async function POST(req) {
   try {
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+
     const body = await req.json();
 
     const texto =
@@ -60,7 +60,10 @@ export async function POST(req) {
     );
 
     if (!agendamento) {
-      return Response.json({ ok: true, message: "Nenhum agendamento pendente encontrado." });
+      return Response.json({
+        ok: true,
+        message: "Nenhum agendamento pendente encontrado."
+      });
     }
 
     const novoStatus =
@@ -120,6 +123,9 @@ Novo status: ${novoStatus.toUpperCase()}`
     return Response.json({ ok: true });
 
   } catch (err) {
-    return Response.json({ error: err.message }, { status: 500 });
+    return Response.json(
+      { error: err.message },
+      { status: 500 }
+    );
   }
 }
