@@ -214,6 +214,7 @@ const liberarHorario = async () => {
       pendente: "#f9a825",
       confirmado: "#2e7d32",
       cancelado: "#c62828",
+      remarcacao: "#8e24aa",
       finalizado: "#1565c0"
     };
 

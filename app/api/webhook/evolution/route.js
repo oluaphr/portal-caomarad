@@ -38,11 +38,31 @@ export async function POST(req) {
 
     const resposta = texto.trim().toLowerCase();
 
-    if (!numero || !texto) {
+    if (!numero || !texto) { 
       return Response.json({ ok: true });
     }
 
-    if (resposta === "remarcar" || resposta === "3") {
+   if (resposta === "remarcar" || resposta === "3") {
+  const { data: agendamentos } = await supabase
+    .from("agendamentos")
+    .select("*")
+    .in("status", ["pendente", "confirmado"])
+    .order("created_at", { ascending: false })
+    .limit(30);
+
+  const numeroFinal = limparNumero(numero).slice(-11);
+
+  const agendamento = agendamentos?.find(
+    (a) => limparNumero(a.whatsapp).slice(-11) === numeroFinal
+  );
+
+  if (agendamento) {
+    await supabase
+      .from("agendamentos")
+      .update({ status: "remarcacao" })
+      .eq("id", agendamento.id);
+  }
+
   await enviarWhatsApp(
     numero,
     `🔁 Remarcação de consulta
@@ -60,9 +80,14 @@ Centro Veterinário Cãomarada 💙`
     process.env.CLINICA_WHATSAPP,
     `🔁 Cliente solicitou remarcação
 
+Tutor: ${agendamento?.nome || "-"}
+Pet: ${agendamento?.pet || "-"}
+Especialidade: ${agendamento?.especialidade || "-"}
+Data anterior: ${agendamento?.data || "-"}
+Horário anterior: ${agendamento?.horario || "-"}
 Número: ${numero}
 
-Oriente o cliente ou acompanhe pelo portal.`
+Status alterado para: REMARCAÇÃO`
   );
 
   return Response.json({ ok: true });
