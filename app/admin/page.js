@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { Search, LogOut, MessageCircle, Eye, FileSpreadsheet, FileText } from "lucide-react";
+import { Search, LogOut, Eye, FileSpreadsheet, FileText } from "lucide-react";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -203,12 +203,7 @@ const liberarHorario = async () => {
     doc.save("agendamentos-caomarada.pdf");
   };
 
-  const abrirWhatsApp = (item) => {
-    const numero = String(item.whatsapp || "").replace(/\D/g, "");
-    const texto = `Olá ${item.nome}, aqui é do Centro Veterinário Cãomarada. Sobre o agendamento do pet ${item.pet} em ${item.data} às ${item.horario}.`;
-    window.open(`https://wa.me/55${numero}?text=${encodeURIComponent(texto)}`, "_blank");
-  };
-
+  
   const badge = (status) => {
     const cores = {
       pendente: "#f9a825",
@@ -468,8 +463,7 @@ const liberarHorario = async () => {
                   <td><span style={badge(item.status)}>{item.status}</span></td>
                   <td>
                     <button onClick={() => setDetalhe(item)}>👁️</button>
-                    <button onClick={() => abrirWhatsApp(item)}>💬</button>
-                    <button onClick={() => alterarStatus(item.id, "confirmado")}>✅</button>
+                 <button onClick={() => alterarStatus(item.id, "confirmado")}>✅</button>
                     <button onClick={() => alterarStatus(item.id, "cancelado")}>❌</button>
                     <button onClick={() => alterarStatus(item.id, "finalizado")}>🏁</button>
                   </td>
