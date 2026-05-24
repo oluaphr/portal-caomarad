@@ -255,32 +255,48 @@ const exportarTudoExcel = async () => {
     return;
   }
 
-  const dados = result.linhas.map((l) => ({
-    Data: l.data?.split("-").reverse().join("/"),
-    Especialidade: l.especialidade,
-    Horário: l.horario,
-    "Horário ativo": l.horario_ativo,
-    Situação: l.situacao,
-    Status: l.status,
-    Tutor: l.tutor,
-    CPF: l.cpf,
-    WhatsApp: l.whatsapp,
-    Pet: l.pet,
-    Espécie: l.especie,
-    Raça: l.raca,
-    Idade: l.idade,
-    Convênio: l.convenio,
-    "Nome Convênio": l.nomeconvenio,
-    CHIP: l.chip
-  }));
-
-  const ws = XLSX.utils.json_to_sheet(dados);
   const wb = XLSX.utils.book_new();
 
-  XLSX.utils.book_append_sheet(wb, ws, "Agenda Geral");
-  XLSX.writeFile(wb, "agenda-geral-caomarada.xlsx");
-};
+  const grupos = {};
 
+  result.linhas.forEach((l) => {
+    const esp = l.especialidade || "Sem Especialidade";
+
+    if (!grupos[esp]) {
+      grupos[esp] = [];
+    }
+
+    grupos[esp].push({
+      Data: l.data?.split("-").reverse().join("/"),
+      Horário: l.horario,
+      "Horário ativo": l.horario_ativo,
+      Situação: l.situacao,
+      Status: l.status,
+      Tutor: l.tutor,
+      CPF: l.cpf,
+      WhatsApp: l.whatsapp,
+      Pet: l.pet,
+      Espécie: l.especie,
+      Raça: l.raca,
+      Idade: l.idade,
+      Convênio: l.convenio,
+      "Nome Convênio": l.nomeconvenio,
+      CHIP: l.chip
+    });
+  });
+
+  Object.keys(grupos).forEach((especialidade) => {
+    const ws = XLSX.utils.json_to_sheet(grupos[especialidade]);
+
+    const nomeAba = especialidade
+      .replace(/[\\/?*[\]:]/g, "")
+      .substring(0, 31);
+
+    XLSX.utils.book_append_sheet(wb, ws, nomeAba);
+  });
+
+  XLSX.writeFile(wb, "agenda-geral-por-especialidade-caomarada.xlsx");
+};
 const exportarTudoPDF = async () => {
   const query = montarQueryRelatorio();
 
