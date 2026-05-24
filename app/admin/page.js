@@ -219,6 +219,84 @@ export default function AdminPage() {
 
     return buscaOk && espOk && statusOk && dataOk;
   });
+const exportarTudoExcel = async () => {
+  const response = await fetch("/api/relatorios/agenda-geral");
+  const result = await response.json();
+
+  if (!response.ok) {
+    setMsg("Erro: " + result.error);
+    return;
+  }
+
+  const dados = result.linhas.map((l) => ({
+    Data: l.data,
+    Especialidade: l.especialidade,
+    Horário: l.horario,
+    "Horário ativo": l.horario_ativo,
+    Situação: l.situacao,
+    Status: l.status,
+    Tutor: l.tutor,
+    CPF: l.cpf,
+    WhatsApp: l.whatsapp,
+    Pet: l.pet,
+    Espécie: l.especie,
+    Raça: l.raca,
+    Idade: l.idade,
+    Convênio: l.convenio,
+    "Nome Convênio": l.nomeconvenio,
+    CHIP: l.chip
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(dados);
+  const wb = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(wb, ws, "Agenda Geral");
+  XLSX.writeFile(wb, "agenda-geral-caomarada.xlsx");
+};
+
+const exportarTudoPDF = async () => {
+  const response = await fetch("/api/relatorios/agenda-geral");
+  const result = await response.json();
+
+  if (!response.ok) {
+    setMsg("Erro: " + result.error);
+    return;
+  }
+
+  const doc = new jsPDF("landscape");
+
+  doc.text("Agenda Geral - Portal Cãomarada", 14, 15);
+
+  autoTable(doc, {
+    startY: 25,
+    head: [[
+      "Data",
+      "Especialidade",
+      "Horário",
+      "Situação",
+      "Status",
+      "Tutor",
+      "Pet",
+      "WhatsApp",
+      "Convênio",
+      "CHIP"
+    ]],
+    body: result.linhas.map((l) => [
+      l.data,
+      l.especialidade,
+      l.horario,
+      l.situacao,
+      l.status,
+      l.tutor,
+      l.pet,
+      l.whatsapp,
+      l.convenio,
+      l.chip
+    ])
+  });
+
+  doc.save("agenda-geral-caomarada.pdf");
+};
 
   const total = agendamentos.length;
   const pendentes = agendamentos.filter((a) => a.status === "pendente").length;
@@ -560,17 +638,30 @@ export default function AdminPage() {
             style={{ padding: 12 }}
           />
         </div>
+<div
+  style={{
+    marginBottom: 20,
+    display: "flex",
+    gap: 10,
+    flexWrap: "wrap"
+  }}
+>
+  <button onClick={exportarExcel} style={{ padding: 12, borderRadius: 10 }}>
+    <FileSpreadsheet size={16} /> Exportar Excel
+  </button>
 
-        <div style={{ marginBottom: 20, display: "flex", gap: 10 }}>
-          <button onClick={exportarExcel} style={{ padding: 12, borderRadius: 10 }}>
-            <FileSpreadsheet size={16} /> Exportar Excel
-          </button>
+  <button onClick={exportarPDF} style={{ padding: 12, borderRadius: 10 }}>
+    <FileText size={16} /> Exportar PDF
+  </button>
 
-          <button onClick={exportarPDF} style={{ padding: 12, borderRadius: 10 }}>
-            <FileText size={16} /> Exportar PDF
-          </button>
-        </div>
+  <button onClick={exportarTudoExcel} style={{ padding: 12, borderRadius: 10 }}>
+    <FileSpreadsheet size={16} /> Exportar Tudo Excel
+  </button>
 
+  <button onClick={exportarTudoPDF} style={{ padding: 12, borderRadius: 10 }}>
+    <FileText size={16} /> Exportar Tudo PDF
+  </button>
+</div>
         <div style={{ ...card, overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "1200px" }}>
             <thead>
