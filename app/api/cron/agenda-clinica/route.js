@@ -109,7 +109,12 @@ Data: ${formatarDataBR(dataAmanha)}
           if (consulta) {
             totalOcupados++;
 
-            mensagem += `🔴 ${h.horario} - OCUPADO | ${consulta.pet || "-"} | Tutor: ${consulta.nome || "-"} | ${consulta.whatsapp || "-"} | ${consulta.status || "-"}\n`;
+            const infoConvenio =
+  consulta.convenio === "Sim"
+    ? `Convênio: Sim | CHIP: ${consulta.chip || "-"}`
+    : "Convênio: Não";
+
+mensagem += `🔴 ${h.horario} - OCUPADO | ${consulta.pet || "-"} | Tutor: ${consulta.nome || "-"} | WhatsApp: ${consulta.whatsapp || "-"} | ${infoConvenio} | Status: ${consulta.status || "-"}\n`;
           } else {
             totalLivres++;
 
