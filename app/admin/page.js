@@ -14,10 +14,21 @@ const supabase = createClient(
 );
 
 const especialidades = [
-  "Neurologista", "Ultrassom", "Dermatologista", "Gastro", "Oftalmologista",
-  "Felinos", "Endócrino", "Cardiologista", "Hematologista (Particular)",
-  "Oncologista", "Ortopedista", "Pneumologista", "Nefrologista"
+  "Neurologista",
+  "Ultrassom",
+  "Dermatologista",
+  "Gastro",
+  "Oftalmologista",
+  "Felinos",
+  "Endócrino",
+  "Cardiologista",
+  "Hematologista (Particular)",
+  "Oncologista",
+  "Ortopedista",
+  "Pneumologista",
+  "Nefrologista"
 ];
+
 const horariosPadrao = [
   "08:00","08:30","09:00","09:30",
   "10:00","10:30","11:00","11:30",
@@ -26,6 +37,7 @@ const horariosPadrao = [
   "16:00","16:30","17:00","17:30",
   "18:00","18:30","19:00","19:30","20:00"
 ];
+
 export default function AdminPage() {
   const router = useRouter();
 
@@ -37,12 +49,18 @@ export default function AdminPage() {
   const [dataFiltro, setDataFiltro] = useState("");
   const [detalhe, setDetalhe] = useState(null);
   const [msg, setMsg] = useState("");
+  const [alterando, setAlterando] = useState(null);
 
- const [horarioForm, setHorarioForm] = useState({
-  especialidade: "",
-  data: "",
-  horarios: []
-});
+  const [novoHorarioForm, setNovoHorarioForm] = useState({
+    data: "",
+    horario: ""
+  });
+
+  const [horarioForm, setHorarioForm] = useState({
+    especialidade: "",
+    data: "",
+    horarios: []
+  });
 
   const card = {
     background: "#fff",
@@ -86,73 +104,97 @@ export default function AdminPage() {
     verificarSessao();
   }, []);
 
-const alterarStatus = async (id, novoStatus) => {
-  const response = await fetch("/api/agendamento/status", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      id,
-      status: novoStatus
-    })
-  });
-
-  const result = await response.json();
-
-  if (!response.ok) {
-    setMsg("Erro: " + result.error);
-  } else {
-    setMsg("Status atualizado e WhatsApp enviado!");
-    carregarAgendamentos();
-  }
-
-  setTimeout(() => setMsg(""), 3000);
-};
-
-const liberarHorario = async () => {
-  if (
-    !horarioForm.especialidade ||
-    !horarioForm.data ||
-    horarioForm.horarios.length === 0
-  ) {
-    setMsg("Selecione especialidade, data e pelo menos um horário.");
-    return;
-  }
-
-  const payload = horarioForm.horarios.map((hora) => ({
-    especialidade: horarioForm.especialidade,
-    data: horarioForm.data,
-    horario: hora,
-    ativo: true
-  }));
-
-  const { error } = await supabase
-    .from("horarios_disponiveis")
-    .upsert(payload, {
-      onConflict: "especialidade,data,horario",
-      ignoreDuplicates: false
+  const alterarStatus = async (id, novoStatus) => {
+    const response = await fetch("/api/agendamento/status", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        id,
+        status: novoStatus
+      })
     });
 
-  if (error) {
-    setMsg("Erro: " + error.message);
-  } else {
-    setMsg("Horários liberados com sucesso!");
-    setHorarioForm({
-      especialidade: "",
-      data: "",
-      horarios: []
-    });
+    const result = await response.json();
 
-    carregarHorarios();
-  }
+    if (!response.ok) {
+      setMsg("Erro: " + result.error);
+    } else {
+      setMsg("Status atualizado e WhatsApp enviado!");
+      carregarAgendamentos();
+    }
 
-  setTimeout(() => setMsg(""), 3000);
-};
+    setTimeout(() => setMsg(""), 3000);
+  };
+
+  const liberarHorario = async () => {
+    if (
+      !horarioForm.especialidade ||
+      !horarioForm.data ||
+      horarioForm.horarios.length === 0
+    ) {
+      setMsg("Selecione especialidade, data e pelo menos um horário.");
+      return;
+    }
+
+    const payload = horarioForm.horarios.map((hora) => ({
+      especialidade: horarioForm.especialidade,
+      data: horarioForm.data,
+      horario: hora,
+      ativo: true
+    }));
+
+    const { error } = await supabase
+      .from("horarios_disponiveis")
+      .upsert(payload, {
+        onConflict: "especialidade,data,horario",
+        ignoreDuplicates: false
+      });
+
+    if (error) {
+      setMsg("Erro: " + error.message);
+    } else {
+      setMsg("Horários liberados com sucesso!");
+      setHorarioForm({
+        especialidade: "",
+        data: "",
+        horarios: []
+      });
+
+      carregarHorarios();
+    }
+
+    setTimeout(() => setMsg(""), 3000);
+  };
 
   const alternarHorario = async (id, ativoAtual) => {
-    await supabase.from("horarios_disponiveis").update({ ativo: !ativoAtual }).eq("id", id);
+    await supabase
+      .from("horarios_disponiveis")
+      .update({ ativo: !ativoAtual })
+      .eq("id", id);
+
     carregarHorarios();
+  };
+
+  const badge = (status) => {
+    const cores = {
+      pendente: "#f9a825",
+      confirmado: "#2e7d32",
+      cancelado: "#c62828",
+      remarcacao: "#8e24aa",
+      aguardando_confirmacao: "#fb8c00",
+      finalizado: "#1565c0"
+    };
+
+    return {
+      background: cores[status] || "#777",
+      color: "#fff",
+      padding: "6px 10px",
+      borderRadius: "999px",
+      fontSize: "12px",
+      fontWeight: "bold"
+    };
   };
 
   const filtrados = agendamentos.filter((item) => {
@@ -163,9 +205,17 @@ const liberarHorario = async () => {
       item.pet?.toLowerCase().includes(termo) ||
       item.cpf?.toLowerCase().includes(termo);
 
-    const espOk = especialidadeFiltro ? item.especialidade === especialidadeFiltro : true;
-    const statusOk = statusFiltro ? item.status === statusFiltro : true;
-    const dataOk = dataFiltro ? item.data === dataFiltro : true;
+    const espOk = especialidadeFiltro
+      ? item.especialidade === especialidadeFiltro
+      : true;
+
+    const statusOk = statusFiltro
+      ? item.status === statusFiltro
+      : true;
+
+    const dataOk = dataFiltro
+      ? item.data === dataFiltro
+      : true;
 
     return buscaOk && espOk && statusOk && dataOk;
   });
@@ -174,6 +224,8 @@ const liberarHorario = async () => {
   const pendentes = agendamentos.filter((a) => a.status === "pendente").length;
   const confirmados = agendamentos.filter((a) => a.status === "confirmado").length;
   const cancelados = agendamentos.filter((a) => a.status === "cancelado").length;
+  const remarcacoes = agendamentos.filter((a) => a.status === "remarcacao").length;
+  const aguardando = agendamentos.filter((a) => a.status === "aguardando_confirmacao").length;
   const finalizados = agendamentos.filter((a) => a.status === "finalizado").length;
 
   const exportarExcel = () => {
@@ -185,6 +237,7 @@ const liberarHorario = async () => {
 
   const exportarPDF = () => {
     const doc = new jsPDF();
+
     doc.text("Portal Cãomarada - Agendamentos", 14, 15);
 
     autoTable(doc, {
@@ -203,37 +256,74 @@ const liberarHorario = async () => {
     doc.save("agendamentos-caomarada.pdf");
   };
 
-  
-  const badge = (status) => {
-    const cores = {
-      pendente: "#f9a825",
-      confirmado: "#2e7d32",
-      cancelado: "#c62828",
-      remarcacao: "#8e24aa",
-      finalizado: "#1565c0"
-    };
+  const enviarAlteracaoHorario = async () => {
+    if (!alterando || !novoHorarioForm.data || !novoHorarioForm.horario) {
+      setMsg("Informe nova data e novo horário.");
+      return;
+    }
 
-    return {
-      background: cores[status] || "#777",
-      color: "#fff",
-      padding: "6px 10px",
-      borderRadius: "999px",
-      fontSize: "12px",
-      fontWeight: "bold"
-    };
+    const response = await fetch("/api/agendamento/alterar-horario", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        id: alterando.id,
+        novaData: novoHorarioForm.data,
+        novoHorario: novoHorarioForm.horario
+      })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      setMsg("Erro: " + result.error);
+    } else {
+      setMsg("Alteração enviada para confirmação do cliente!");
+      setAlterando(null);
+      setNovoHorarioForm({
+        data: "",
+        horario: ""
+      });
+      carregarAgendamentos();
+    }
+
+    setTimeout(() => setMsg(""), 3000);
   };
 
   return (
-    <main style={{ minHeight: "100vh", background: "#eef5fb", padding: 30, fontFamily: "Arial" }}>
+    <main
+      style={{
+        minHeight: "100vh",
+        background: "#eef5fb",
+        padding: 30,
+        fontFamily: "Arial"
+      }}
+    >
       <div style={{ maxWidth: 1600, margin: "0 auto" }}>
-
         {msg && (
-          <div style={{ background: "#2e7d32", color: "#fff", padding: 14, borderRadius: 12, marginBottom: 20 }}>
+          <div
+            style={{
+              background: "#2e7d32",
+              color: "#fff",
+              padding: 14,
+              borderRadius: 12,
+              marginBottom: 20
+            }}
+          >
             {msg}
           </div>
         )}
 
-        <div style={{ ...card, marginBottom: 20, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div
+          style={{
+            ...card,
+            marginBottom: 20,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center"
+          }}
+        >
           <div>
             <h1 style={{ color: "#1565c0" }}>Painel Administrativo</h1>
             <p>Portal Cãomarada</p>
@@ -258,10 +348,19 @@ const liberarHorario = async () => {
           </button>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 15, marginBottom: 20 }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+            gap: 15,
+            marginBottom: 20
+          }}
+        >
           <div style={card}><h3>📊 Total</h3><h1>{total}</h1></div>
           <div style={card}><h3>🟡 Pendentes</h3><h1>{pendentes}</h1></div>
           <div style={card}><h3>🟢 Confirmados</h3><h1>{confirmados}</h1></div>
+          <div style={card}><h3>🟠 Aguardando</h3><h1>{aguardando}</h1></div>
+          <div style={card}><h3>🟣 Remarcação</h3><h1>{remarcacoes}</h1></div>
           <div style={card}><h3>🔴 Cancelados</h3><h1>{cancelados}</h1></div>
           <div style={card}><h3>🔵 Finalizados</h3><h1>{finalizados}</h1></div>
         </div>
@@ -269,86 +368,98 @@ const liberarHorario = async () => {
         <div style={{ ...card, marginBottom: 20 }}>
           <h2 style={{ color: "#1565c0" }}>Liberar Horários por Especialidade</h2>
 
-        <div
-  style={{
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: 12,
-    marginTop: 15
-  }}
->
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 12,
+              marginTop: 15
+            }}
+          >
             <select
               value={horarioForm.especialidade}
-              onChange={(e) => setHorarioForm({ ...horarioForm, especialidade: e.target.value })}
+              onChange={(e) =>
+                setHorarioForm({
+                  ...horarioForm,
+                  especialidade: e.target.value
+                })
+              }
               style={{ padding: 12 }}
             >
               <option value="">Especialidade</option>
-              {especialidades.map((e) => <option key={e}>{e}</option>)}
+              {especialidades.map((e) => (
+                <option key={e}>{e}</option>
+              ))}
             </select>
 
             <input
               type="date"
               value={horarioForm.data}
-              onChange={(e) => setHorarioForm({ ...horarioForm, data: e.target.value })}
+              onChange={(e) =>
+                setHorarioForm({
+                  ...horarioForm,
+                  data: e.target.value
+                })
+              }
               style={{ padding: 12 }}
             />
 
-           <div
-  style={{
-    gridColumn: "1 / -1",
-    display: "grid",
-    gridTemplateColumns: "repeat(5, 1fr)",
-    gap: 10,
-    marginTop: 10
-  }}
->
-  {horariosPadrao.map((hora) => (
-    <label
-      key={hora}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 8,
-        padding: 10,
-        background: "#f5f9ff",
-        borderRadius: 10
-      }}
-    >
-      <input
-        type="checkbox"
-        checked={horarioForm.horarios.includes(hora)}
-        onChange={(e) => {
-          if (e.target.checked) {
-            setHorarioForm({
-              ...horarioForm,
-              horarios: [...horarioForm.horarios, hora]
-            });
-          } else {
-            setHorarioForm({
-              ...horarioForm,
-              horarios: horarioForm.horarios.filter((h) => h !== hora)
-            });
-          }
-        }}
-      />
-      {hora}
-    </label>
-  ))}
-</div>
+            <div
+              style={{
+                gridColumn: "1 / -1",
+                display: "grid",
+                gridTemplateColumns: "repeat(5, 1fr)",
+                gap: 10,
+                marginTop: 10
+              }}
+            >
+              {horariosPadrao.map((hora) => (
+                <label
+                  key={hora}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: 10,
+                    background: "#f5f9ff",
+                    borderRadius: 10
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={horarioForm.horarios.includes(hora)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setHorarioForm({
+                          ...horarioForm,
+                          horarios: [...horarioForm.horarios, hora]
+                        });
+                      } else {
+                        setHorarioForm({
+                          ...horarioForm,
+                          horarios: horarioForm.horarios.filter((h) => h !== hora)
+                        });
+                      }
+                    }}
+                  />
+                  {hora}
+                </label>
+              ))}
+            </div>
 
-         <button
-  onClick={liberarHorario}
-  style={{
-    padding: "12px 18px",
-    background: "#1565c0",
-    color: "#fff",
-    border: "none",
-    borderRadius: 10,
-    gridColumn: "1 / -1"
-  }}
->
-  Liberar horários selecionados
-</button>
+            <button
+              onClick={liberarHorario}
+              style={{
+                padding: "12px 18px",
+                background: "#1565c0",
+                color: "#fff",
+                border: "none",
+                borderRadius: 10,
+                gridColumn: "1 / -1"
+              }}
+            >
+              Liberar horários selecionados
+            </button>
           </div>
 
           <div style={{ marginTop: 20, overflowX: "auto" }}>
@@ -369,7 +480,12 @@ const liberarHorario = async () => {
                     <td>{h.especialidade}</td>
                     <td>{h.data}</td>
                     <td>{h.horario}</td>
-                    <td style={{ color: h.ativo ? "#2e7d32" : "#c62828", fontWeight: "bold" }}>
+                    <td
+                      style={{
+                        color: h.ativo ? "#2e7d32" : "#c62828",
+                        fontWeight: "bold"
+                      }}
+                    >
                       {h.ativo ? "Ativo" : "Bloqueado"}
                     </td>
                     <td>
@@ -393,7 +509,15 @@ const liberarHorario = async () => {
           </div>
         </div>
 
-        <div style={{ ...card, marginBottom: 20, display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 12 }}>
+        <div
+          style={{
+            ...card,
+            marginBottom: 20,
+            display: "grid",
+            gridTemplateColumns: "2fr 1fr 1fr 1fr",
+            gap: 12
+          }}
+        >
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <Search size={18} />
             <input
@@ -404,20 +528,37 @@ const liberarHorario = async () => {
             />
           </div>
 
-          <select value={especialidadeFiltro} onChange={(e) => setEspecialidadeFiltro(e.target.value)} style={{ padding: 12 }}>
+          <select
+            value={especialidadeFiltro}
+            onChange={(e) => setEspecialidadeFiltro(e.target.value)}
+            style={{ padding: 12 }}
+          >
             <option value="">Todas especialidades</option>
-            {especialidades.map((e) => <option key={e}>{e}</option>)}
+            {especialidades.map((e) => (
+              <option key={e}>{e}</option>
+            ))}
           </select>
 
-          <select value={statusFiltro} onChange={(e) => setStatusFiltro(e.target.value)} style={{ padding: 12 }}>
+          <select
+            value={statusFiltro}
+            onChange={(e) => setStatusFiltro(e.target.value)}
+            style={{ padding: 12 }}
+          >
             <option value="">Todos status</option>
             <option value="pendente">Pendente</option>
             <option value="confirmado">Confirmado</option>
+            <option value="aguardando_confirmacao">Aguardando confirmação</option>
+            <option value="remarcacao">Remarcação</option>
             <option value="cancelado">Cancelado</option>
             <option value="finalizado">Finalizado</option>
           </select>
 
-          <input type="date" value={dataFiltro} onChange={(e) => setDataFiltro(e.target.value)} style={{ padding: 12 }} />
+          <input
+            type="date"
+            value={dataFiltro}
+            onChange={(e) => setDataFiltro(e.target.value)}
+            style={{ padding: 12 }}
+          />
         </div>
 
         <div style={{ marginBottom: 20, display: "flex", gap: 10 }}>
@@ -450,7 +591,13 @@ const liberarHorario = async () => {
 
             <tbody>
               {filtrados.map((item, index) => (
-                <tr key={item.id} style={{ background: index % 2 === 0 ? "#fff" : "#f7fbff", borderBottom: "1px solid #ddd" }}>
+                <tr
+                  key={item.id}
+                  style={{
+                    background: index % 2 === 0 ? "#fff" : "#f7fbff",
+                    borderBottom: "1px solid #ddd"
+                  }}
+                >
                   <td>{item.nome}</td>
                   <td>{item.cpf}</td>
                   <td>{item.whatsapp}</td>
@@ -460,12 +607,29 @@ const liberarHorario = async () => {
                   <td>{item.horario}</td>
                   <td>{item.nomeconvenio || item.convenio || "-"}</td>
                   <td>{item.chip || "-"}</td>
-                  <td><span style={badge(item.status)}>{item.status}</span></td>
                   <td>
-                    <button onClick={() => setDetalhe(item)}>👁️</button>
-                 <button onClick={() => alterarStatus(item.id, "confirmado")}>✅</button>
-                    <button onClick={() => alterarStatus(item.id, "cancelado")}>❌</button>
-                    <button onClick={() => alterarStatus(item.id, "finalizado")}>🏁</button>
+                    <span style={badge(item.status)}>{item.status}</span>
+                  </td>
+                  <td>
+                    <button title="Ver detalhes" onClick={() => setDetalhe(item)}>
+                      👁️
+                    </button>
+
+                    <button title="Alterar horário" onClick={() => setAlterando(item)}>
+                      🕐
+                    </button>
+
+                    <button title="Confirmar" onClick={() => alterarStatus(item.id, "confirmado")}>
+                      ✅
+                    </button>
+
+                    <button title="Cancelar" onClick={() => alterarStatus(item.id, "cancelado")}>
+                      ❌
+                    </button>
+
+                    <button title="Finalizar" onClick={() => alterarStatus(item.id, "finalizado")}>
+                      🏁
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -474,14 +638,16 @@ const liberarHorario = async () => {
         </div>
 
         {detalhe && (
-          <div style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center"
-          }}>
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(0,0,0,.5)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
+            }}
+          >
             <div style={{ background: "#fff", padding: 30, borderRadius: 20, width: 500 }}>
               <h2>Detalhes do Agendamento</h2>
               <p><b>Tutor:</b> {detalhe.nome}</p>
@@ -493,7 +659,82 @@ const liberarHorario = async () => {
               <p><b>Horário:</b> {detalhe.horario}</p>
               <p><b>Status:</b> {detalhe.status}</p>
 
-              <button onClick={() => setDetalhe(null)} style={{ marginTop: 15, padding: 12 }}>
+              <button
+                onClick={() => setDetalhe(null)}
+                style={{ marginTop: 15, padding: 12 }}
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        )}
+
+        {alterando && (
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(0,0,0,.5)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
+            }}
+          >
+            <div style={{ background: "#fff", padding: 30, borderRadius: 20, width: 420 }}>
+              <h2>Alterar horário</h2>
+
+              <p><b>Tutor:</b> {alterando.nome}</p>
+              <p><b>Pet:</b> {alterando.pet}</p>
+              <p><b>Atual:</b> {alterando.data} às {alterando.horario}</p>
+
+              <input
+                type="date"
+                value={novoHorarioForm.data}
+                onChange={(e) =>
+                  setNovoHorarioForm({
+                    ...novoHorarioForm,
+                    data: e.target.value
+                  })
+                }
+                style={{ width: "100%", padding: 12, marginTop: 10 }}
+              />
+
+              <input
+                type="time"
+                value={novoHorarioForm.horario}
+                onChange={(e) =>
+                  setNovoHorarioForm({
+                    ...novoHorarioForm,
+                    horario: e.target.value
+                  })
+                }
+                style={{ width: "100%", padding: 12, marginTop: 10 }}
+              />
+
+              <button
+                onClick={enviarAlteracaoHorario}
+                style={{
+                  marginTop: 15,
+                  padding: 12,
+                  background: "#1565c0",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 10
+                }}
+              >
+                Enviar alteração
+              </button>
+
+              <button
+                onClick={() => {
+                  setAlterando(null);
+                  setNovoHorarioForm({
+                    data: "",
+                    horario: ""
+                  });
+                }}
+                style={{ marginTop: 10, marginLeft: 10, padding: 12 }}
+              >
                 Fechar
               </button>
             </div>
