@@ -86,12 +86,29 @@ export default function AdminPage() {
     verificarSessao();
   }, []);
 
-  const alterarStatus = async (id, novoStatus) => {
-    await supabase.from("agendamentos").update({ status: novoStatus }).eq("id", id);
-    setMsg("Status atualizado com sucesso!");
+const alterarStatus = async (id, novoStatus) => {
+  const response = await fetch("/api/agendamento/status", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      id,
+      status: novoStatus
+    })
+  });
+
+  const result = await response.json();
+
+  if (!response.ok) {
+    setMsg("Erro: " + result.error);
+  } else {
+    setMsg("Status atualizado e WhatsApp enviado!");
     carregarAgendamentos();
-    setTimeout(() => setMsg(""), 3000);
-  };
+  }
+
+  setTimeout(() => setMsg(""), 3000);
+};
 
 const liberarHorario = async () => {
   if (
