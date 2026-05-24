@@ -150,6 +150,25 @@ if (error) {
     setMostrarWhatsapp(true);
   }
 };
+const obterDiaSemana = (data) => {
+  if (!data) return "";
+
+  const dias = [
+    "Domingo",
+    "Segunda-feira",
+    "Terça-feira",
+    "Quarta-feira",
+    "Quinta-feira",
+    "Sexta-feira",
+    "Sábado"
+  ];
+
+  const [ano, mes, dia] = data.split("-");
+  const dt = new Date(ano, mes - 1, dia);
+
+  return dias[dt.getDay()];
+};
+
   const inputStyle = {
     width: "100%",
     padding: "14px",
@@ -274,11 +293,11 @@ if (error) {
       : "Selecione a data"}
   </option>
 
-  {datasDisponiveis.map((data) => (
-    <option key={data} value={data}>
-      {data.split("-").reverse().join("/")}
-    </option>
-  ))}
+{datasDisponiveis.map((data) => (
+  <option key={data} value={data}>
+    {data.split("-").reverse().join("/")} - {obterDiaSemana(data)}
+  </option>
+))}
 </select>
 
           <select
