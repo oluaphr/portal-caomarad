@@ -1,7 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/cron/lembretes",
+      "path": "/api/cron/lembretes?secret=caomarada_cron_2026",
       "schedule": "0 12 * * *"
     }
   ]

@@ -27,12 +27,12 @@ const formatarNumero = (numero) => {
   return limpo.startsWith("55") ? limpo : `55${limpo}`;
 };
 
-export async function GET(req) {
-  const auth = req.headers.get("authorization");
+const { searchParams } = new URL(req.url);
+const secret = searchParams.get("secret");
 
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
-    return Response.json({ error: "Não autorizado" }, { status: 401 });
-  }
+if (secret !== process.env.CRON_SECRET) {
+  return Response.json({ error: "Não autorizado" }, { status: 401 });
+}
 
   const hoje = new Date();
   const amanha = new Date(hoje);
