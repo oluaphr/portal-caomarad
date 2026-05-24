@@ -311,47 +311,7 @@ if (error) {
 </select>
           </div>
 
-          <button
-            type="submit"
-            style={{
-  marginTop: "30px",
-  width: "100%",
-  padding: "16px",
-  background: "linear-gradient(135deg, #1565c0, #42a5f5)",
-  color: "#fff",
-  border: "none",
-  borderRadius: "12px",
-  fontWeight: "bold",
-  fontSize: "16px",
-  cursor: "pointer"
-}}
-          >
-            Solicitar Agendamento
-          </button>
-
-          <p>{status}</p>
-{mostrarWhatsapp && (
-  <a
-    href={`https://wa.me/5511991230407?text=${encodeURIComponent(
-      "Olá! Acabei de solicitar um agendamento no Portal Cãomarada."
-    )}`}
-    target="_blank"
-    style={{
-      display: "block",
-      marginTop: "20px",
-      padding: "16px",
-      textAlign: "center",
-      background: "#25D366",
-      color: "#fff",
-      borderRadius: "12px",
-      textDecoration: "none",
-      fontWeight: "bold"
-    }}
-  >
-    📱 Confirmar no WhatsApp
-  </a>
-)}
-        </form>
+                 </form>
       </div>
     </main>
   );
