@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 
 const enviarWhatsApp = async (numero, mensagem) => {
-  await fetch(
+  const response = await fetch(
     `${process.env.EVOLUTION_API_URL}/message/sendText/${process.env.EVOLUTION_INSTANCE_NAME}`,
     {
       method: "POST",
@@ -9,9 +9,14 @@ const enviarWhatsApp = async (numero, mensagem) => {
         "Content-Type": "application/json",
         apikey: process.env.EVOLUTION_API_KEY
       },
-      body: JSON.stringify({ number: numero, text: mensagem })
+      body: JSON.stringify({
+        number: numero,
+        text: mensagem
+      })
     }
   );
+
+  return response.text();
 };
 
 const formatarNumero = (numero) => {
@@ -28,6 +33,13 @@ export async function POST(req) {
 
     const { id, novaData, novoHorario } = await req.json();
 
+    if (!id || !novaData || !novoHorario) {
+      return Response.json(
+        { error: "ID, nova data e novo horário são obrigatórios." },
+        { status: 400 }
+      );
+    }
+
     const { data: agendamento, error: erroBusca } = await supabase
       .from("agendamentos")
       .select("*")
@@ -35,27 +47,58 @@ export async function POST(req) {
       .single();
 
     if (erroBusca || !agendamento) {
-      return Response.json({ error: "Agendamento não encontrado" }, { status: 404 });
+      return Response.json(
+        { error: "Agendamento não encontrado." },
+        { status: 404 }
+      );
     }
 
-    const { error } = await supabase
+    const dataAntiga = agendamento.data;
+    const horarioAntigo = agendamento.horario;
+
+    await supabase
+      .from("horarios_disponiveis")
+      .upsert(
+        [
+          {
+            especialidade: agendamento.especialidade,
+            data: novaData,
+            horario: novoHorario,
+            ativo: true
+          }
+        ],
+        {
+          onConflict: "especialidade,data,horario",
+          ignoreDuplicates: false
+        }
+      );
+
+    const { error: erroUpdate } = await supabase
       .from("agendamentos")
       .update({
         data: novaData,
         horario: novoHorario,
-        status: "aguardando_confirmacao"
+        status: "aguardando_confirmacao",
+        lembrete_enviado: false
       })
       .eq("id", id);
 
-    if (error) {
-      return Response.json({ error: error.message }, { status: 500 });
+    if (erroUpdate) {
+      return Response.json(
+        { error: erroUpdate.message },
+        { status: 500 }
+      );
     }
 
-    const dataFormatada = novaData.split("-").reverse().join("/");
-    const numero = formatarNumero(agendamento.whatsapp);
+    const dataNovaFormatada = novaData.split("-").reverse().join("/");
+    const dataAntigaFormatada = dataAntiga
+      ? dataAntiga.split("-").reverse().join("/")
+      : "-";
+
+    const numeroCliente = formatarNumero(agendamento.whatsapp);
 
     await enviarWhatsApp(
-      numero,
+      numeroCliente,
       `🔁 Alteração de agendamento
 
 Olá, ${agendamento.nome}!
@@ -63,23 +106,59 @@ Olá, ${agendamento.nome}!
 Precisamos alterar o horário da consulta do pet ${agendamento.pet}.
 
 🏥 Especialidade: ${agendamento.especialidade}
-📅 Nova data: ${dataFormatada}
-🕐 Novo horário: ${novoHorario}
 
-Para confirmar, responda:
+Horário anterior:
+📅 ${dataAntigaFormatada}
+🕐 ${horarioAntigo}
+
+Novo horário:
+📅 ${dataNovaFormatada}
+🕐 ${novoHorario}
+
+Para confirmar o novo horário, responda:
 1 ou CONFIRMAR
 
 Para cancelar, responda:
 2 ou CANCELAR
 
-Para solicitar nova remarcação, responda:
+Para solicitar outra remarcação, responda:
 3 ou REMARCAR
 
 Centro Veterinário Cãomarada 💙`
     );
 
-    return Response.json({ success: true });
+    await enviarWhatsApp(
+      process.env.CLINICA_WHATSAPP,
+      `🔁 Alteração enviada ao cliente
+
+Tutor: ${agendamento.nome}
+Pet: ${agendamento.pet}
+Especialidade: ${agendamento.especialidade}
+
+Horário anterior:
+${dataAntigaFormatada} às ${horarioAntigo}
+
+Novo horário:
+${dataNovaFormatada} às ${novoHorario}
+
+Status: AGUARDANDO CONFIRMAÇÃO`
+    );
+
+    return Response.json({
+      success: true,
+      antigo: {
+        data: dataAntiga,
+        horario: horarioAntigo
+      },
+      novo: {
+        data: novaData,
+        horario: novoHorario
+      }
+    });
   } catch (err) {
-    return Response.json({ error: err.message }, { status: 500 });
+    return Response.json(
+      { error: err.message },
+      { status: 500 }
+    );
   }
 }
