@@ -78,6 +78,12 @@ export default function AdminPage() {
     setAgendamentos(data || []);
   };
 
+const [relatorioFiltro, setRelatorioFiltro] = useState({
+  dataInicio: "",
+  dataFim: "",
+  especialidade: ""
+});
+
   const carregarHorarios = async () => {
     const { data } = await supabase
       .from("horarios_disponiveis")
@@ -219,8 +225,29 @@ export default function AdminPage() {
 
     return buscaOk && espOk && statusOk && dataOk;
   });
+
+const montarQueryRelatorio = () => {
+  const params = new URLSearchParams();
+
+  if (relatorioFiltro.dataInicio) {
+    params.append("dataInicio", relatorioFiltro.dataInicio);
+  }
+
+  if (relatorioFiltro.dataFim) {
+    params.append("dataFim", relatorioFiltro.dataFim);
+  }
+
+  if (relatorioFiltro.especialidade) {
+    params.append("especialidade", relatorioFiltro.especialidade);
+  }
+
+  return params.toString();
+};
+
 const exportarTudoExcel = async () => {
-  const response = await fetch("/api/relatorios/agenda-geral");
+  const query = montarQueryRelatorio();
+
+  const response = await fetch(`/api/relatorios/agenda-geral?${query}`);
   const result = await response.json();
 
   if (!response.ok) {
@@ -229,7 +256,7 @@ const exportarTudoExcel = async () => {
   }
 
   const dados = result.linhas.map((l) => ({
-    Data: l.data,
+    Data: l.data?.split("-").reverse().join("/"),
     Especialidade: l.especialidade,
     Horário: l.horario,
     "Horário ativo": l.horario_ativo,
@@ -255,7 +282,9 @@ const exportarTudoExcel = async () => {
 };
 
 const exportarTudoPDF = async () => {
-  const response = await fetch("/api/relatorios/agenda-geral");
+  const query = montarQueryRelatorio();
+
+  const response = await fetch(`/api/relatorios/agenda-geral?${query}`);
   const result = await response.json();
 
   if (!response.ok) {
@@ -297,7 +326,6 @@ const exportarTudoPDF = async () => {
 
   doc.save("agenda-geral-caomarada.pdf");
 };
-
   const total = agendamentos.length;
   const pendentes = agendamentos.filter((a) => a.status === "pendente").length;
   const confirmados = agendamentos.filter((a) => a.status === "confirmado").length;
@@ -638,6 +666,8 @@ const exportarTudoPDF = async () => {
             style={{ padding: 12 }}
           />
         </div>
+
+
 <div
   style={{
     marginBottom: 20,
