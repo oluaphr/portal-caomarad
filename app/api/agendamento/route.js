@@ -95,6 +95,10 @@ Para cancelar, responda:
 
 2 ou CANCELAR
 
+Para remarcar, responda:
+
+3 ou REMARCAR
+
 Centro Veterinário Cãomarada 💙
 Atendimento 24 horas`;
 

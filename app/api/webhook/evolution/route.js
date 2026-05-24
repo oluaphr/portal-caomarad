@@ -42,9 +42,35 @@ export async function POST(req) {
       return Response.json({ ok: true });
     }
 
-    if (!["confirmar", "1", "cancelar", "2"].includes(resposta)) {
-      return Response.json({ ok: true });
-    }
+    if (resposta === "remarcar" || resposta === "3") {
+  await enviarWhatsApp(
+    numero,
+    `🔁 Remarcação de consulta
+
+Claro! Para remarcar, acesse novamente o portal e escolha uma nova data e horário disponível:
+
+https://portal-caomarad.vercel.app
+
+Se preferir, nossa equipe também pode ajudar por aqui.
+
+Centro Veterinário Cãomarada 💙`
+  );
+
+  await enviarWhatsApp(
+    process.env.CLINICA_WHATSAPP,
+    `🔁 Cliente solicitou remarcação
+
+Número: ${numero}
+
+Oriente o cliente ou acompanhe pelo portal.`
+  );
+
+  return Response.json({ ok: true });
+}
+
+if (!["confirmar", "1", "cancelar", "2"].includes(resposta)) {
+  return Response.json({ ok: true });
+}
 
     const { data: agendamentos } = await supabase
       .from("agendamentos")
